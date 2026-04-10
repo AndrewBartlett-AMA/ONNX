@@ -16,7 +16,8 @@ export const router = createHashRouter(
         { path: 'timeline', element: <TimelinePage /> },
         { path: 'workspaces', element: <WorkspacesPage /> },
         { path: 'settings', element: <SettingsPage /> },
-        { path: 'session', element: <SessionPage /> }
+        { path: 'session', element: <SessionPage /> },
+        { path: 'session/:sessionId', element: <SessionPage /> }
       ]
     }
   ],
