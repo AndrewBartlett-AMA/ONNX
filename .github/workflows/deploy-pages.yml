@@ -31,10 +31,17 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npm run build:pages
         env:
-          GITHUB_ACTIONS: 'true'
           GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Verify Pages asset paths
+        run: |
+          if ! grep -q "/${{ github.event.repository.name }}/assets/" dist/index.html; then
+            echo "GitHub Pages base path was not written into dist/index.html"
+            cat dist/index.html
+            exit 1
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

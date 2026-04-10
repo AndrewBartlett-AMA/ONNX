@@ -108,3 +108,30 @@ This repository starter pack includes:
 ## Deployment note
 
 GitHub Pages is suitable for the first production-style release of the static app, but model size, bandwidth, and cross-origin isolation constraints should be monitored closely as the app grows.
+
+## GitHub Pages deployment
+
+This repo already contains a GitHub Pages workflow in [.github/workflows/deploy-pages.yml](./.github/workflows/deploy-pages.yml), but the repository must also be configured correctly in GitHub.
+
+### Required GitHub setting
+
+In `Settings -> Pages`, set **Source** to **GitHub Actions**.
+
+If Pages is left on `Deploy from a branch`, GitHub will publish the raw repository root instead of the built `dist` artifact. In this repo that means GitHub serves the source [index.html](./index.html), which points at `/src/main.tsx`; browsers cannot run that file directly on Pages, so the app appears broken.
+
+### Deploy flow
+
+1. Push to `main`.
+2. Open the `Actions` tab and confirm `Deploy Quiet Scribe to GitHub Pages` succeeds.
+3. After deployment, load `https://andrewbartlett-ama.github.io/ONNX/`.
+
+### Local Pages verification
+
+Use the Pages-style build before pushing if you want to confirm the base path is correct:
+
+```bash
+npm run build:pages
+npm run preview
+```
+
+Then open `/ONNX/` on the local preview server and verify the generated [dist/index.html](./dist/index.html) references `/ONNX/assets/...`.

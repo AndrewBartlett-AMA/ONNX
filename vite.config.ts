@@ -4,8 +4,25 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+function normalizeBasePath(value?: string) {
+  if (!value) {
+    return undefined
+  }
+
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    return undefined
+  }
+
+  const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`
+}
+
 const repository = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'QuietScribe-Web-Granite'
-const base = process.env.GITHUB_ACTIONS === 'true' ? `/${repository}/` : '/'
+const configuredBase = normalizeBasePath(process.env.VITE_PUBLIC_BASE_PATH)
+const inferredBase = process.env.GITHUB_ACTIONS === 'true' ? `/${repository}/` : '/'
+const base = configuredBase ?? inferredBase
 
 export default defineConfig({
   base,
