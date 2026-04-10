@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-tint": "#adc6ff",
+            "tertiary": "#e1dcfd",
+            "on-tertiary-container": "#47445f",
+            "surface-bright": "#252d33",
+            "surface-container-low": "#111416",
+            "on-primary-fixed-variant": "#0057bd",
+            "surface-container-lowest": "#000000",
+            "surface-container-highest": "#20262c",
+            "secondary-fixed": "#e2e2e9",
+            "surface-container-high": "#1b2025",
+            "on-error": "#490106",
+            "primary": "#adc6ff",
+            "outline": "#70767c",
+            "error-dim": "#bb5551",
+            "secondary-dim": "#9d9da4",
+            "surface-dim": "#0c0e10",
+            "surface-container": "#161a1e",
+            "on-primary": "#003d88",
+            "on-primary-container": "#bdd0ff",
+            "on-background": "#e0e6ed",
+            "secondary": "#9d9da4",
+            "on-secondary-fixed-variant": "#5a5b61",
+            "on-secondary": "#1e2025",
+            "surface": "#0c0e10",
+            "on-surface-variant": "#a6acb2",
+            "tertiary-fixed-dim": "#c5c0e0",
+            "secondary-fixed-dim": "#d4d4db",
+            "on-tertiary-fixed-variant": "#504e69",
+            "error": "#ee7d77",
+            "primary-fixed-dim": "#c3d4ff",
+            "outline-variant": "#42494e",
+            "surface-variant": "#20262c",
+            "inverse-on-surface": "#535557",
+            "primary-fixed": "#d8e2ff",
+            "on-primary-fixed": "#003c86",
+            "secondary-container": "#3a3b41",
+            "on-error-container": "#ff9993",
+            "on-tertiary": "#504d68",
+            "tertiary-fixed": "#d3ceef",
+            "on-secondary-fixed": "#3e3f45",
+            "error-container": "#7f2927",
+            "inverse-surface": "#f9f9fc",
+            "on-tertiary-fixed": "#34314b",
+            "tertiary-dim": "#c5c0e0",
+            "on-secondary-container": "#bebfc5",
+            "primary-container": "#004395",
+            "tertiary-container": "#d3ceef",
+            "primary-dim": "#98b8ff",
+            "on-surface": "#e0e6ed",
+            "background": "#0c0e10",
+            "inverse-primary": "#005bc4"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0c0e10;
+      color: #e0e6ed;
+    }
+    h1, h2, h3 {
+      font-family: 'Manrope', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0c0e10;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #20262c;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0c0e10]/70 backdrop-blur-md shadow-xl shadow-black/40">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-slate-50 font-manrope tracking-tight">Quiet Scribe</span>
+<div class="h-6 w-[1px] bg-outline-variant/20 mx-2"></div>
+<span class="text-slate-400 font-manrope text-sm font-semibold">Session: Product Strategy Q3</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 mr-4">
+<span class="material-symbols-outlined text-slate-400" data-icon="sync">sync</span>
+<span class="material-symbols-outlined text-slate-400" data-icon="signal_cellular_alt">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-slate-400" data-icon="battery_full">battery_full</span>
+</div>
+<button class="bg-surface-container-high text-slate-400 px-4 py-2 rounded-lg font-manrope text-sm font-semibold hover:bg-slate-800/50 transition-colors active:scale-95 duration-200">
+        Export
+      </button>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-2 rounded-lg font-manrope text-sm font-bold hover:brightness-110 transition-all active:scale-95 duration-200 shadow-lg shadow-primary/10">
+        New Recording
+      </button>
+</div>
+</header>
+<!-- SideNavBar Implementation (Collapsed/Small Version for Focus Mode) -->
+<aside class="fixed left-0 top-0 h-screen w-20 md:w-64 flex flex-col py-6 space-y-2 bg-[#0c0e10] z-40 pt-20 border-r border-transparent">
+<div class="px-4 mb-8 hidden md:block">
+<p class="text-slate-400 font-manrope text-xs uppercase tracking-widest font-bold">Workspace</p>
+<p class="text-[#adc6ff] font-manrope text-sm font-medium">Deep Focus Mode</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-[#adc6ff]" data-icon="home">home</span>
+<span class="hidden md:block font-manrope text-sm">Home</span>
+</div>
+<div class="bg-[#004395] text-[#adc6ff] rounded-lg px-4 py-3 mx-2 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="hidden md:block font-manrope text-sm font-bold">Timeline</span>
+</div>
+<div class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-[#adc6ff]" data-icon="grid_view">grid_view</span>
+<span class="hidden md:block font-manrope text-sm">Workspaces</span>
+</div>
+<div class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-[#adc6ff]" data-icon="settings">settings</span>
+<span class="hidden md:block font-manrope text-sm">Settings</span>
+</div>
+</nav>
+<div class="px-4 mt-auto">
+<div class="bg-surface-container-highest p-3 rounded-xl flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a professional user with minimalist background, soft rim lighting, high-end photography style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1ul2kBR9HqzNLG220i37GGUahcyzCXtIwse0MDzz1Meur5WdHM0JlSIJSwdMDUUvbML0IcHWBQpfBXE0TLQugvOfIbaVK9KIcAQELNX0FeNszZjBIrBLeDxjZ7JFTc4DHhBCL2OUDLpP4UJFppCs4RWq08EkytJhOZqQHewuBIVQ_5_mxIb8RlF2oKFUx9jzovg-unk_CEUcK_co1ZCBWpS-bXZi_7UwcIo__15RwZa3FHHNOCxz4I92ia1AT79l_h2UXUPymt_N8"/>
+<div class="hidden md:block">
+<p class="text-xs font-bold text-on-surface">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant">Pro Plan</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-20 md:ml-64 pt-16 h-screen flex overflow-hidden">
+<!-- Left Panel: Live Transcript Timeline -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest relative overflow-hidden">
+<!-- Session Indicator -->
+<div class="px-8 py-4 flex items-center justify-between bg-surface-container-low/50 backdrop-blur-sm z-10">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+<span class="text-xs font-bold font-manrope uppercase tracking-tighter text-on-surface">Live Transcription</span>
+</div>
+<span class="text-xs text-on-surface-variant font-mono bg-surface-container-highest px-2 py-1 rounded">00:42:15</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Transcript Timeline -->
+<div class="flex-1 overflow-y-auto px-8 py-6 space-y-8 custom-scrollbar">
+<!-- Transcript Bubble 1 -->
+<div class="group flex gap-4 max-w-2xl">
+<div class="flex-shrink-0 mt-1">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-[10px] font-bold text-primary">SC</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface">Sarah Connor</span>
+<span class="text-[10px] text-on-surface-variant uppercase">10:42 AM</span>
+<span class="bg-surface-container-highest text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span>💡</span> Insight
+              </span>
+</div>
+<p class="text-on-background leading-relaxed text-sm">
+              We need to consider the impact of the new obsidian-based design system on our lower-latency interfaces. If we lean too hard into glassmorphism, are we risking performance on mobile devices?
+            </p>
+</div>
+</div>
+<!-- Transcript Bubble 2 -->
+<div class="group flex gap-4 max-w-2xl ml-auto flex-row-reverse text-right">
+<div class="flex-shrink-0 mt-1">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-on-surface-variant">JS</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-2 justify-end">
+<span class="bg-surface-container-highest text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span>⚡</span> Objection
+              </span>
+<span class="text-[10px] text-on-surface-variant uppercase">10:43 AM</span>
+<span class="text-sm font-bold text-on-surface">James Smith</span>
+</div>
+<p class="text-on-background leading-relaxed text-sm">
+              The backdrop-blur filter is GPU intensive, but modern chips handle it fine. My concern is more about accessibility—ensuring contrast ratios stay above 4.5:1 on these semi-transparent surfaces.
+            </p>
+</div>
+</div>
+<!-- Transcript Bubble 3 (Active Transcription State) -->
+<div class="group flex gap-4 max-w-2xl">
+<div class="flex-shrink-0 mt-1">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-[10px] font-bold text-primary">SC</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-2">
+<span class="text-sm font-bold text-on-surface">Sarah Connor</span>
+<span class="text-[10px] text-on-surface-variant uppercase">10:44 AM</span>
+<span class="bg-surface-container-highest text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+<span>🎯</span> Action
+              </span>
+</div>
+<p class="text-on-background/60 leading-relaxed text-sm italic">
+              Transcription in progress... "Let's benchmark the rendering times on the iPhone 12 and 13 models specifically. I want to see if the frame rate drops below 60fps during heavy scrolling."
+            </p>
+<div class="flex gap-1">
+<span class="w-1 h-1 bg-primary rounded-full animate-bounce"></span>
+<span class="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.2s]"></span>
+<span class="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:0.4s]"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Playback Controls -->
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-surface-container-high/80 backdrop-blur-xl px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl shadow-black">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors" data-icon="skip_previous">skip_previous</button>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors" data-icon="skip_next">skip_next</button>
+<div class="h-4 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+<span>1.0x</span>
+<span class="material-symbols-outlined text-sm" data-icon="speed">speed</span>
+</div>
+</div>
+</section>
+<!-- Right Panel: Tabbed Detail Panel -->
+<section class="w-[420px] bg-surface border-l border-outline-variant/10 flex flex-col">
+<!-- Tabs Header -->
+<div class="flex px-4 pt-4 border-b border-outline-variant/5">
+<button class="flex-1 py-3 text-sm font-bold border-b-2 border-primary text-primary transition-all">Transcript</button>
+<button class="flex-1 py-3 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all">Notes &amp; Outputs</button>
+<button class="flex-1 py-3 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all">Metadata</button>
+</div>
+<!-- Tab Content: Transcript Utility -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+<!-- Summary Card -->
+<div class="bg-surface-container-low rounded-xl p-5 border border-outline-variant/5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="text-sm font-bold font-manrope">AI Executive Summary</h3>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+            The team is discussing the implementation of an "Obsidian" design system, specifically focusing on the performance and accessibility trade-offs of using high-end visual effects like backdrop-blur and tonal layering in dark mode.
+          </p>
+</div>
+<!-- Key Terms / Chips -->
+<div class="space-y-3">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Key Topics</h3>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-high px-3 py-1.5 rounded-full text-xs text-on-surface font-medium hover:bg-surface-bright transition-colors cursor-pointer">Performance</span>
+<span class="bg-surface-container-high px-3 py-1.5 rounded-full text-xs text-on-surface font-medium hover:bg-surface-bright transition-colors cursor-pointer">Accessibility</span>
+<span class="bg-surface-container-high px-3 py-1.5 rounded-full text-xs text-on-surface font-medium hover:bg-surface-bright transition-colors cursor-pointer">Obsidian UI</span>
+<span class="bg-primary-container/30 text-primary px-3 py-1.5 rounded-full text-xs font-medium">Design System</span>
+<span class="bg-surface-container-high px-3 py-1.5 rounded-full text-xs text-on-surface font-medium hover:bg-surface-bright transition-colors cursor-pointer">Latency</span>
+</div>
+</div>
+<!-- Speaker Profiles -->
+<div class="space-y-3">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Participants</h3>
+<div class="space-y-3">
+<div class="flex items-center justify-between group cursor-pointer p-2 -mx-2 hover:bg-surface-container-low rounded-lg transition-all">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-[10px] font-bold text-primary">SC</div>
+<div>
+<p class="text-xs font-bold">Sarah Connor</p>
+<p class="text-[10px] text-on-surface-variant">Design Lead • 65% airtime</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity" data-icon="open_in_new">open_in_new</span>
+</div>
+<div class="flex items-center justify-between group cursor-pointer p-2 -mx-2 hover:bg-surface-container-low rounded-lg transition-all">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-on-surface-variant">JS</div>
+<div>
+<p class="text-xs font-bold">James Smith</p>
+<p class="text-[10px] text-on-surface-variant">Tech Architect • 35% airtime</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity" data-icon="open_in_new">open_in_new</span>
+</div>
+</div>
+</div>
+<!-- Audio Visualization / Snapshot -->
+<div class="space-y-3">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Audio Spectrum</h3>
+<div class="bg-surface-container-lowest h-24 rounded-xl relative overflow-hidden flex items-end gap-[2px] p-2">
+<!-- Mock wave pattern -->
+<div class="bg-primary/40 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[70%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[90%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[30%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[60%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[80%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[40%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[20%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[15%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[25%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[50%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[45%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[75%] rounded-t-sm"></div>
+<div class="bg-primary w-full h-[85%] rounded-t-sm"></div>
+<div class="bg-primary/60 w-full h-[55%] rounded-t-sm"></div>
+<div class="bg-primary/40 w-full h-[35%] rounded-t-sm"></div>
+<div class="bg-primary/20 w-full h-[15%] rounded-t-sm"></div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="p-6 border-t border-outline-variant/5">
+<button class="w-full bg-surface-container-highest hover:bg-surface-bright text-on-surface py-3 rounded-lg text-sm font-bold font-manrope transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="smart_toy">smart_toy</span>
+          Generate Meeting Minutes
+        </button>
+</div>
+</section>
+</main>
+</body></html>

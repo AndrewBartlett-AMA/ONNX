@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#adc6ff",
+                        "tertiary": "#e1dcfd",
+                        "on-tertiary-container": "#47445f",
+                        "surface-bright": "#252d33",
+                        "surface-container-low": "#111416",
+                        "on-primary-fixed-variant": "#0057bd",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-highest": "#20262c",
+                        "secondary-fixed": "#e2e2e9",
+                        "surface-container-high": "#1b2025",
+                        "on-error": "#490106",
+                        "primary": "#adc6ff",
+                        "outline": "#70767c",
+                        "error-dim": "#bb5551",
+                        "secondary-dim": "#9d9da4",
+                        "surface-dim": "#0c0e10",
+                        "surface-container": "#161a1e",
+                        "on-primary": "#003d88",
+                        "on-primary-container": "#bdd0ff",
+                        "on-background": "#e0e6ed",
+                        "secondary": "#9d9da4",
+                        "on-secondary-fixed-variant": "#5a5b61",
+                        "on-secondary": "#1e2025",
+                        "surface": "#0c0e10",
+                        "on-surface-variant": "#a6acb2",
+                        "tertiary-fixed-dim": "#c5c0e0",
+                        "secondary-fixed-dim": "#d4d4db",
+                        "on-tertiary-fixed-variant": "#504e69",
+                        "error": "#ee7d77",
+                        "primary-fixed-dim": "#c3d4ff",
+                        "outline-variant": "#42494e",
+                        "surface-variant": "#20262c",
+                        "inverse-on-surface": "#535557",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#003c86",
+                        "secondary-container": "#3a3b41",
+                        "on-error-container": "#ff9993",
+                        "on-tertiary": "#504d68",
+                        "tertiary-fixed": "#d3ceef",
+                        "on-secondary-fixed": "#3e3f45",
+                        "error-container": "#7f2927",
+                        "inverse-surface": "#f9f9fc",
+                        "on-tertiary-fixed": "#34314b",
+                        "tertiary-dim": "#c5c0e0",
+                        "on-secondary-container": "#bebfc5",
+                        "primary-container": "#004395",
+                        "tertiary-container": "#d3ceef",
+                        "primary-dim": "#98b8ff",
+                        "on-surface": "#e0e6ed",
+                        "background": "#0c0e10",
+                        "inverse-primary": "#005bc4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0c0e10;
+            color: #e0e6ed;
+            font-family: 'Inter', sans-serif;
+        }
+        .editorial-shadow {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .glass-header {
+            background: rgba(12, 14, 16, 0.7);
+            backdrop-filter: blur(20px);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #adc6ff 0%, #004395 100%);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body selection:bg-primary/30 selection:text-primary">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0c0e10]/70 backdrop-blur-md shadow-xl shadow-black/40">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-slate-50 font-headline tracking-tight">Quiet Scribe</span>
+</div>
+<div class="hidden md:flex items-center space-x-8">
+<button class="text-slate-400 hover:bg-slate-800/50 transition-colors px-3 py-1 rounded-lg text-sm font-medium">Search</button>
+<button class="text-[#adc6ff] font-bold font-headline tracking-tight text-sm">Timeline</button>
+<button class="text-slate-400 hover:bg-slate-800/50 transition-colors px-3 py-1 rounded-lg text-sm font-medium">Workspaces</button>
+</div>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 p-2 rounded-full transition-colors">sync</button>
+<button class="material-symbols-outlined text-slate-400 hover:bg-slate-800/50 p-2 rounded-full transition-colors">battery_full</button>
+<button class="bg-primary-container text-[#adc6ff] px-4 py-2 rounded-lg text-sm font-bold font-headline active:scale-95 duration-200">New Recording</button>
+</div>
+</header>
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-[#0c0e10] flex flex-col py-6 space-y-2 hidden md:flex z-40">
+<div class="px-6 mb-8 mt-16">
+<h1 class="text-lg font-black tracking-tighter text-slate-50 font-headline">Quiet Scribe</h1>
+<p class="text-xs text-on-surface-variant">Deep Focus Mode</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all text-sm" href="#">
+<span class="material-symbols-outlined">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 bg-[#004395] text-[#adc6ff] rounded-lg px-4 py-3 mx-2 text-sm font-semibold" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Timeline</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all text-sm" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span>Workspaces</span>
+</a>
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all text-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-6 pt-4 border-t border-outline-variant/10">
+<button class="w-full primary-gradient text-on-primary py-3 rounded-lg font-bold text-sm shadow-lg active:scale-[0.98] transition-transform">
+                New Entry
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:pl-64 pt-24 min-h-screen px-6 pb-20">
+<div class="max-w-5xl mx-auto">
+<!-- Header Section with Editorial Layout -->
+<section class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="text-display-lg font-headline font-extrabold text-on-surface text-5xl tracking-tighter mb-2">Timeline History</h2>
+<p class="text-on-surface-variant text-lg">Your cognitive archive, organized by time and context.</p>
+</div>
+<div class="flex flex-wrap gap-3">
+<div class="flex items-center bg-surface-container-highest rounded-lg px-4 py-2 group focus-within:ring-2 ring-primary/50 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-on-surface-variant w-48 md:w-64" placeholder="Search snippets..." type="text"/>
+</div>
+<button class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg text-sm font-semibold hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Filter
+                    </button>
+</div>
+</section>
+<!-- Active Date Chip & Quick Access -->
+<div class="flex gap-4 mb-8 overflow-x-auto no-scrollbar pb-2">
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full text-xs font-bold whitespace-nowrap">October 2023</button>
+<button class="bg-surface-container-low text-on-surface-variant px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap hover:bg-surface-container-high transition-colors">September 2023</button>
+<button class="bg-surface-container-low text-on-surface-variant px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap hover:bg-surface-container-high transition-colors">August 2023</button>
+<button class="bg-surface-container-low text-on-surface-variant px-6 py-2 rounded-full text-xs font-medium whitespace-nowrap hover:bg-surface-container-high transition-colors">Archive</button>
+</div>
+<!-- Timeline Entries - Bento Grid Style -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Timeline Marker -->
+<div class="relative pl-12 py-2">
+<div class="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/30"></div>
+<div class="absolute left-[13px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary outline outline-4 outline-surface"></div>
+<h3 class="text-xs font-bold uppercase tracking-widest text-primary/70 font-label">Today, Oct 24</h3>
+</div>
+<!-- Entry 1: Large Featured Card -->
+<article class="bg-surface-container-low hover:bg-surface-container p-6 rounded-xl transition-all group relative overflow-hidden">
+<div class="flex flex-col md:flex-row gap-6 relative z-10">
+<div class="w-full md:w-1/3 aspect-video md:aspect-square rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-highest">
+<img class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="abstract desk setup with soft focus light and shadow textures for professional productivity vibe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeo8cZ8Ois9L5eVQ0dOq1MyYswsUyROnMz9Z2v-dtKcbxae6HwNtjpfp4O9poTyiocDRpyKwgqnNNX47QkAnRuqR2FAhD5ytgYlqZAxtgVgotmAd67e5GwN_cfZ6xoS0dvldXRXoDDQUUV2ZbIithwMyuXlw1LC4SdxR5DTbg7tm5WR3xif_MNpMcnIT_AzTvb9t7VASzI9zycr0VvrRDzo-UUfoChdkEVhnIG6GVlUR9fuaFI6_qhlyL06bDML4Rom6dV2lNug9fO"/>
+</div>
+<div class="flex-1 flex flex-col justify-between py-1">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">mic</span>
+                                        Recording
+                                    </span>
+<span class="text-xs text-on-surface-variant font-medium">14:32 • 45m 12s</span>
+</div>
+<h4 class="text-2xl font-headline font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">Project Aegis: Strategy Refinement</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed line-clamp-3 mb-6">
+                                    Discussion centered on the Q4 roadmap and the integration of the new semantic search engine. Stakeholders highlighted the need for lower latency in document ingestion and more robust export options for enterprise users...
+                                </p>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">#strategy</span>
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">#ai-infra</span>
+<span class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider">#q4-goals</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Entry 2: Snippet Layout -->
+<article class="bg-surface-container-low hover:bg-surface-container p-6 rounded-xl transition-all group border-l-4 border-primary/20">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h4 class="text-lg font-headline font-bold text-on-surface">AI Reflection: Mental Clarity Session</h4>
+<span class="text-xs text-on-surface-variant">09:15 • 12m 04s</span>
+</div>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">more_horiz</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-4 rounded-lg bg-surface-container-highest/50 border border-outline-variant/10">
+<p class="text-[11px] font-bold text-primary mb-1 uppercase tracking-tighter">Key Insight</p>
+<p class="text-xs text-on-surface italic italic leading-relaxed">"Focus on the 'Obsidian Library' metaphor as the core visual anchor for the sanctuary design system."</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-highest/50 border border-outline-variant/10">
+<p class="text-[11px] font-bold text-tertiary mb-1 uppercase tracking-tighter">Action Item</p>
+<p class="text-xs text-on-surface leading-relaxed">Schedule a sync with the design team regarding tonal layering and the no-line rule implementation.</p>
+</div>
+</div>
+</article>
+<!-- Timeline Marker -->
+<div class="relative pl-12 py-2 mt-4">
+<div class="absolute left-4 top-0 bottom-0 w-px bg-outline-variant/30"></div>
+<div class="absolute left-[13px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-outline-variant outline outline-4 outline-surface"></div>
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label">Yesterday, Oct 23</h3>
+</div>
+<!-- Entry 3: Compact Layout -->
+<article class="bg-surface-container-low hover:bg-surface-container p-5 rounded-xl transition-all group flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">description</span>
+<div>
+<h4 class="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Daily Standup Notes</h4>
+<p class="text-xs text-on-surface-variant">10:00 • Summary Generated • 2m read</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-xs font-bold text-primary hover:underline transition-all">View Details</button>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">chevron_right</span>
+</div>
+</article>
+<!-- Entry 4: Compact Layout -->
+<article class="bg-surface-container-low hover:bg-surface-container p-5 rounded-xl transition-all group flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">headset_mic</span>
+<div>
+<h4 class="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Customer Interview: User A</h4>
+<p class="text-xs text-on-surface-variant">15:45 • Transcript Ready • 1h 02m</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-xs font-bold text-primary hover:underline transition-all">View Details</button>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<span class="material-symbols-outlined text-on-surface-variant text-lg">chevron_right</span>
+</div>
+</article>
+</div>
+<!-- Empty State / Load More Section -->
+<div class="mt-12 flex flex-col items-center justify-center p-12 border border-dashed border-outline-variant/20 rounded-2xl">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant/40 mb-4">history_toggle_off</span>
+<p class="text-on-surface-variant font-medium text-sm mb-4">Showing last 24 entries</p>
+<button class="bg-surface-container-high px-8 py-3 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-bright transition-all active:scale-95">
+                    Load Older History
+                </button>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Navigation (Shared Component Responsive Pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container border-t border-outline-variant/10 px-6 py-3 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px]">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[#adc6ff] font-bold">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px]">Timeline</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px]">Spaces</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px]">Settings</span>
+</button>
+</nav>
+</body></html>

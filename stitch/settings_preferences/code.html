@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Quiet Scribe</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f8f9fa",
+                    "background": "#f8f9fa",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#424754",
+                    "secondary": "#9d4300",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#924700",
+                    "surface-container-high": "#e7e8e9",
+                    "on-tertiary-container": "#fffbff",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e1e3e4",
+                    "primary-container": "#2170e4",
+                    "surface-container": "#edeeef",
+                    "primary": "#0058be",
+                    "on-primary-container": "#fefcff",
+                    "on-tertiary-fixed": "#311400",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#adc6ff",
+                    "tertiary-fixed": "#ffdcc6",
+                    "tertiary-container": "#b75b00",
+                    "surface-container-highest": "#e1e3e4",
+                    "inverse-surface": "#2e3132",
+                    "inverse-on-surface": "#f0f1f2",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#783200",
+                    "surface-container-low": "#f3f4f5",
+                    "secondary-container": "#fd761a",
+                    "on-background": "#191c1d",
+                    "outline-variant": "#c2c6d6",
+                    "on-primary-fixed": "#001a42",
+                    "surface-tint": "#005ac2",
+                    "outline": "#727785",
+                    "on-secondary-container": "#5c2400",
+                    "on-primary-fixed-variant": "#004395",
+                    "secondary-fixed": "#ffdbca",
+                    "on-secondary-fixed": "#341100",
+                    "primary-fixed-dim": "#adc6ff",
+                    "secondary-fixed-dim": "#ffb690",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-dim": "#d9dadb",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "on-surface": "#191c1d",
+                    "surface-bright": "#f8f9fa",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-surface text-on-background">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col h-screen w-64 border-r-0 bg-slate-50 dark:bg-slate-900 font-['Plus_Jakarta_Sans'] tracking-tight">
+<div class="p-8 flex items-center gap-3">
+<div class="w-8 h-8 bg-gradient-to-br from-primary to-primary-container rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">edit_square</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">Quiet Scribe</h1>
+<p class="text-xs text-on-surface-variant opacity-70">Pro Workspace</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors duration-200 rounded-xl group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">home</span>
+<span class="font-medium">Home</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors duration-200 rounded-xl group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">history</span>
+<span class="font-medium">Timeline</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors duration-200 rounded-xl group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">workspaces</span>
+<span class="font-medium">Workspaces</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 dark:text-blue-400 font-semibold bg-slate-200/50 dark:bg-slate-800 rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200/50 dark:border-slate-800/50">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors duration-200 rounded-xl" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-medium">Help</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors duration-200 rounded-xl" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-medium">Logout</span>
+</a>
+<div class="mt-4 flex items-center gap-3 px-4 py-2">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a professional man with friendly expression against neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCtN3UuAjqkpyH9j01kRSVCdj2uPrQ9ZqiKXqcyaskoqgd-Hdf2o4aGvgyVez4bylSwagWcORIAP6ugILHn6bkUgHEKgaOHd6C2lSX-LNg4T6c9Sc06yGbxowkgYNqXRRh6ePtTWuOlWaWv-U291tVGvHO4k59KnB2VWhYHxhBJ1TUD3UKYq3J_Ybf1DhQK68G6GWhXhKqbGsgvba21cCy2BCr9mCGm21w8742ncb6jfe8WBfO6ltTWaw53LSHZyPt8vg57Acw_SuA"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Alex Chen</p>
+<p class="text-[10px] text-on-surface-variant truncate">alex@scribe.pro</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-64 z-30 flex justify-between items-center px-8 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl font-['Plus_Jakarta_Sans'] font-medium">
+<div class="flex items-center gap-2">
+<span class="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Settings</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 mr-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined">memory</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined">speaker</span>
+</button>
+</div>
+<button class="px-4 py-2 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
+                Export
+            </button>
+<button class="px-5 py-2 text-sm font-semibold text-on-primary bg-gradient-to-br from-primary to-primary-container rounded-md shadow-sm">
+                New Recording
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 px-12 pb-12 min-h-screen">
+<div class="max-w-5xl mx-auto flex gap-12 items-start">
+<!-- Local Settings Navigation -->
+<nav class="w-48 sticky top-24 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-primary bg-surface-container-lowest rounded-lg" href="#general">General</a>
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#audio">Audio</a>
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#ai-model">AI Model</a>
+<a class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#storage">Storage</a>
+</nav>
+<!-- Settings Form Sections -->
+<div class="flex-1 space-y-12">
+<!-- General Section -->
+<section class="bg-surface-container-lowest p-10 rounded-xl shadow-[0_8px_32px_0_rgba(25,28,29,0.04)]" id="general">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">tune</span>
+</div>
+<div>
+<h2 class="text-xl font-bold font-headline tracking-tight text-on-background">General</h2>
+<p class="text-sm text-on-surface-variant">Core application preferences and interface behavior.</p>
+</div>
+</div>
+<div class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-background">Interface Theme</label>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-low border-2 border-primary rounded-lg text-sm font-medium">
+<span class="material-symbols-outlined text-sm">light_mode</span> Light
+                                    </button>
+<button class="flex items-center justify-center gap-2 py-3 px-4 bg-surface-container-low border-2 border-transparent hover:border-outline-variant/30 transition-colors rounded-lg text-sm font-medium">
+<span class="material-symbols-outlined text-sm">dark_mode</span> Dark
+                                    </button>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-background">Application Language</label>
+<div class="relative">
+<select class="w-full bg-surface-container-low border-none rounded-sm px-4 py-3 text-sm focus:ring-0 focus:ring-offset-0 appearance-none">
+<option>English (United States)</option>
+<option>German (Deutsch)</option>
+<option>French (Français)</option>
+<option>Japanese (日本語)</option>
+</select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+</div>
+<div class="w-full h-[2px] bg-surface-container-highest absolute bottom-0"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-primary">save</span>
+<div>
+<p class="text-sm font-semibold">Auto-save transcription</p>
+<p class="text-xs text-on-surface-variant">Automatically commit changes to the cloud every 30 seconds.</p>
+</div>
+</div>
+<button class="w-12 h-6 bg-primary rounded-full relative flex items-center transition-colors">
+<div class="absolute right-1 w-4 h-4 bg-white rounded-full"></div>
+</button>
+</div>
+</div>
+</section>
+<!-- Audio Section -->
+<section class="bg-surface-container-lowest p-10 rounded-xl shadow-[0_8px_32px_0_rgba(25,28,29,0.04)]" id="audio">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">mic_none</span>
+</div>
+<div>
+<h2 class="text-xl font-bold font-headline tracking-tight text-on-background">Audio</h2>
+<p class="text-sm text-on-surface-variant">Manage your recording hardware and signal processing.</p>
+</div>
+</div>
+<div class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-background">Default Microphone</label>
+<select class="w-full bg-surface-container-low border-none rounded-sm px-4 py-3 text-sm focus:ring-0 appearance-none">
+<option>Built-in Microphone (MacBook Pro)</option>
+<option>Yeti Nano USB (Active)</option>
+<option>System Default</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-on-background">Output Speaker</label>
+<select class="w-full bg-surface-container-low border-none rounded-sm px-4 py-3 text-sm focus:ring-0 appearance-none">
+<option>MacBook Pro Speakers</option>
+<option>External Headphones (3.5mm)</option>
+</select>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-semibold text-on-background">Input Gain Control</label>
+<span class="text-xs font-mono text-primary font-bold">+12dB</span>
+</div>
+<div class="relative w-full h-1 bg-surface-container-high rounded-full">
+<div class="absolute top-0 left-0 h-full w-[65%] bg-primary rounded-full"></div>
+<div class="absolute top-1/2 left-[65%] -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-secondary">graphic_eq</span>
+<div>
+<p class="text-sm font-semibold">Active Noise Suppression</p>
+<p class="text-xs text-on-surface-variant">Filter out background hum and fan noise in real-time.</p>
+</div>
+</div>
+<button class="w-12 h-6 bg-surface-container-highest rounded-full relative flex items-center transition-colors">
+<div class="absolute left-1 w-4 h-4 bg-white rounded-full"></div>
+</button>
+</div>
+</div>
+</section>
+<!-- AI Model Section -->
+<section class="bg-surface-container-lowest p-10 rounded-xl shadow-[0_8px_32px_0_rgba(25,28,29,0.04)]" id="ai-model">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">neurology</span>
+</div>
+<div>
+<h2 class="text-xl font-bold font-headline tracking-tight text-on-background">AI Model</h2>
+<p class="text-sm text-on-surface-variant">Configure the transcription engine and manage local weights.</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="p-6 rounded-lg bg-surface-container border border-outline-variant/10">
+<div class="flex items-start justify-between mb-4">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">data_object</span>
+<div>
+<p class="text-sm font-bold">Whisper-v3-Large (Offline)</p>
+<p class="text-xs text-on-surface-variant">Highest accuracy • 2.9GB storage used</p>
+</div>
+</div>
+<button class="text-xs font-semibold text-error px-3 py-1 hover:bg-error/5 rounded-md transition-colors">Delete Model</button>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+<div class="p-6 rounded-lg border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center py-10 gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">download_for_offline</span>
+<p class="text-sm font-medium">Download Whisper-v3-Turbo</p>
+<p class="text-xs text-on-surface-variant">Recommended for real-time transcription (800MB)</p>
+<button class="mt-2 px-4 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-xs font-semibold rounded-md transition-colors">Start Download</button>
+</div>
+<div class="pt-4">
+<label class="text-sm font-semibold text-on-background block mb-3">Transcription Engine</label>
+<div class="grid grid-cols-1 gap-3">
+<label class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-low cursor-pointer">
+<input checked="" class="text-primary focus:ring-0 bg-surface border-outline-variant/30" name="engine" type="radio"/>
+<div class="flex-1">
+<p class="text-sm font-bold">Neural Engine (Optimized)</p>
+<p class="text-xs text-on-surface-variant">Uses Apple Silicon hardware for 3x speed increase.</p>
+</div>
+</label>
+<label class="flex items-center gap-4 p-4 rounded-lg bg-surface cursor-pointer border border-outline-variant/10">
+<input class="text-primary focus:ring-0 bg-surface border-outline-variant/30" name="engine" type="radio"/>
+<div class="flex-1">
+<p class="text-sm font-bold">CPU Core (Standard)</p>
+<p class="text-xs text-on-surface-variant">Reliable fallback, higher battery consumption.</p>
+</div>
+</label>
+</div>
+</div>
+</div>
+</section>
+<!-- Storage Section -->
+<section class="bg-surface-container-lowest p-10 rounded-xl shadow-[0_8px_32px_0_rgba(25,28,29,0.04)]" id="storage">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div>
+<h2 class="text-xl font-bold font-headline tracking-tight text-on-background">Storage</h2>
+<p class="text-sm text-on-surface-variant">Monitor and manage your local workspace data.</p>
+</div>
+</div>
+<div class="space-y-8">
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-end">
+<div>
+<p class="text-3xl font-extrabold font-headline text-on-background">12.4 <span class="text-lg font-medium opacity-50">GB</span></p>
+<p class="text-xs text-on-surface-variant">Total storage occupied by Quiet Scribe</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-semibold text-on-background">84.2 GB Available</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">on Macintosh HD</p>
+</div>
+</div>
+<div class="flex h-3 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[15%]" title="Recordings"></div>
+<div class="h-full bg-primary-container w-[10%]" title="Models"></div>
+<div class="h-full bg-surface-variant w-[5%]" title="Cache"></div>
+</div>
+<div class="flex gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Recordings (8.2GB)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Models (3.7GB)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-surface-variant"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Cache (0.5GB)</span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-surface-container flex items-center justify-between">
+<div>
+<p class="text-sm font-bold">Temporary Cache</p>
+<p class="text-xs text-on-surface-variant">Removing cache will not delete your recordings.</p>
+</div>
+<button class="px-6 py-2.5 bg-surface-container-high hover:bg-error hover:text-on-primary text-sm font-bold rounded-lg transition-all">
+                                Clear Cache
+                            </button>
+</div>
+</div>
+</section>
+<footer class="pt-12 text-center pb-24">
+<p class="text-xs text-on-surface-variant">Quiet Scribe v2.4.1 (Build 8292)</p>
+<div class="flex justify-center gap-6 mt-4">
+<a class="text-xs font-medium text-primary hover:underline" href="#">Privacy Policy</a>
+<a class="text-xs font-medium text-primary hover:underline" href="#">Terms of Service</a>
+<a class="text-xs font-medium text-primary hover:underline" href="#">Support</a>
+</div>
+</footer>
+</div>
+</div>
+</main>
+<!-- Floating Scribe Toolbar -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-surface-container-lowest/85 backdrop-blur-xl rounded-full shadow-[0_8px_32px_0_rgba(25,28,29,0.08)] z-50">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">undo</span>
+</button>
+<div class="w-px h-4 bg-outline-variant/30 mx-1"></div>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/5 hover:bg-primary/10 text-primary rounded-full transition-colors">
+<span class="text-xs font-bold">Discard Changes</span>
+</button>
+<button class="flex items-center gap-2 px-6 py-2 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+<span class="text-xs font-bold">Save Settings</span>
+</button>
+</div>
+</body></html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quiet Scribe - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#adc6ff",
+                      "tertiary": "#e1dcfd",
+                      "on-tertiary-container": "#47445f",
+                      "surface-bright": "#252d33",
+                      "surface-container-low": "#111416",
+                      "on-primary-fixed-variant": "#0057bd",
+                      "surface-container-lowest": "#000000",
+                      "surface-container-highest": "#20262c",
+                      "secondary-fixed": "#e2e2e9",
+                      "surface-container-high": "#1b2025",
+                      "on-error": "#490106",
+                      "primary": "#adc6ff",
+                      "outline": "#70767c",
+                      "error-dim": "#bb5551",
+                      "secondary-dim": "#9d9da4",
+                      "surface-dim": "#0c0e10",
+                      "surface-container": "#161a1e",
+                      "on-primary": "#003d88",
+                      "on-primary-container": "#bdd0ff",
+                      "on-background": "#e0e6ed",
+                      "secondary": "#9d9da4",
+                      "on-secondary-fixed-variant": "#5a5b61",
+                      "on-secondary": "#1e2025",
+                      "surface": "#0c0e10",
+                      "on-surface-variant": "#a6acb2",
+                      "tertiary-fixed-dim": "#c5c0e0",
+                      "secondary-fixed-dim": "#d4d4db",
+                      "on-tertiary-fixed-variant": "#504e69",
+                      "error": "#ee7d77",
+                      "primary-fixed-dim": "#c3d4ff",
+                      "outline-variant": "#42494e",
+                      "surface-variant": "#20262c",
+                      "inverse-on-surface": "#535557",
+                      "primary-fixed": "#d8e2ff",
+                      "on-primary-fixed": "#003c86",
+                      "secondary-container": "#3a3b41",
+                      "on-error-container": "#ff9993",
+                      "on-tertiary": "#504d68",
+                      "tertiary-fixed": "#d3ceef",
+                      "on-secondary-fixed": "#3e3f45",
+                      "error-container": "#7f2927",
+                      "inverse-surface": "#f9f9fc",
+                      "on-tertiary-fixed": "#34314b",
+                      "tertiary-dim": "#c5c0e0",
+                      "on-secondary-container": "#bebfc5",
+                      "primary-container": "#004395",
+                      "tertiary-container": "#d3ceef",
+                      "primary-dim": "#98b8ff",
+                      "on-surface": "#e0e6ed",
+                      "background": "#0c0e10",
+                      "inverse-primary": "#005bc4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Manrope"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0c0e10;
+            color: #e0e6ed;
+            font-family: 'Inter', sans-serif;
+        }
+        .bento-card {
+            background-color: #111416;
+            transition: background-color 0.2s ease;
+        }
+        .bento-card:hover {
+            background-color: #1b2025;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #20262c;
+            border-radius: 8px;
+            height: 4px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #adc6ff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-[#0c0e10] flex flex-col py-6 space-y-2 z-40 hidden md:flex">
+<div class="px-6 mb-8">
+<h1 class="text-lg font-black tracking-tighter text-slate-50 font-headline uppercase">Quiet Scribe</h1>
+<p class="text-xs text-on-surface-variant font-label tracking-wide">Deep Focus Mode</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 font-label" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+                Home
+            </a>
+<a class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 font-label" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                Timeline
+            </a>
+<a class="text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all flex items-center gap-3 font-label" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+                Workspaces
+            </a>
+<a class="bg-[#004395] text-[#adc6ff] rounded-lg px-4 py-3 mx-2 flex items-center gap-3 font-label" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-semibold py-3 rounded-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                New Entry
+            </button>
+</div>
+</aside>
+<!-- Top Navigation (Mobile) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0c0e10]/70 backdrop-blur-md shadow-xl shadow-black/40 md:ml-64 md:w-[calc(100%-16rem)]">
+<h2 class="text-xl font-bold text-slate-50 font-headline tracking-tight">Settings</h2>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-container-highest rounded-full">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="sync">sync</span>
+<span class="text-xs font-label text-on-surface-variant">Cloud Synced</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400" data-icon="signal_cellular_alt">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-slate-400" data-icon="battery_full">battery_full</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up portrait of a professional man with neutral expression and soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvuYcbvwypHg1W5TqTaRLqto_LANj-mKgXs1nGF854qspVSIPSs9UssxT44ZoIAhS1cjj6mEl8QCcj1cdK5TAjVjfnf5eBHZBL8fZJC1jlkql2tEs6TuS30ZSYoErQtPdEYjVM0wfGImxuSptT4HE51z3wFhkvr27FpNrmihg86PpzhfTxes82umGVFWNGRV0N-jGqN1seoM0C3AuCMIbgkx-rEXQHaQJoNkzUNrWz6UWqHSybcdz-kDqCHJc7Vwbl43SjV6D_4oEZ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-24 pb-12 px-6 md:ml-64 min-h-screen">
+<div class="max-w-5xl mx-auto space-y-8">
+<!-- Page Title & Description -->
+<div class="space-y-2">
+<h3 class="text-3xl font-extrabold font-headline text-on-surface tracking-tight">System Preferences</h3>
+<p class="text-on-surface-variant max-w-xl leading-relaxed">Customize your digital sanctuary. Fine-tune recording quality, AI processing models, and visual appearance.</p>
+</div>
+<!-- Settings Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Section: General -->
+<section class="lg:col-span-8 space-y-6">
+<div class="bento-card p-8 rounded-xl space-y-8 shadow-sm">
+<div class="flex items-center gap-3 border-b border-outline-variant/10 pb-4">
+<span class="material-symbols-outlined text-primary" data-icon="palette">palette</span>
+<h4 class="text-xl font-bold font-headline">General &amp; Appearance</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-3">
+<label class="text-sm font-semibold font-label text-on-surface">Interface Theme</label>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-surface-container-highest p-4 rounded-lg flex flex-col items-center gap-2 border-2 border-primary ring-2 ring-primary/20">
+<div class="w-full h-12 bg-surface-container-lowest rounded-md border border-outline-variant/20"></div>
+<span class="text-xs font-label">Obsidian Dark</span>
+</button>
+<button class="bg-surface-container-high p-4 rounded-lg flex flex-col items-center gap-2 border border-outline-variant/10 hover:bg-surface-container-highest transition-colors">
+<div class="w-full h-12 bg-slate-100 rounded-md"></div>
+<span class="text-xs font-label">Arctic Light</span>
+</button>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<span class="text-sm font-semibold font-label block">Focus Mode</span>
+<span class="text-xs text-on-surface-variant">Hide all non-essential UI</span>
+</div>
+<button class="w-12 h-6 rounded-full bg-primary-container relative flex items-center transition-colors">
+<div class="absolute right-1 w-4 h-4 bg-primary rounded-full shadow-md"></div>
+</button>
+</div>
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<span class="text-sm font-semibold font-label block">Spellcheck</span>
+<span class="text-xs text-on-surface-variant">Real-time correction</span>
+</div>
+<button class="w-12 h-6 rounded-full bg-surface-container-highest relative flex items-center transition-colors">
+<div class="absolute left-1 w-4 h-4 bg-outline rounded-full shadow-md"></div>
+</button>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<label class="text-sm font-semibold font-label text-on-surface">Primary Language</label>
+<select class="w-full bg-surface-container-highest border-none rounded-lg p-3 text-on-surface focus:ring-2 focus:ring-primary/30 transition-all">
+<option>English (United States)</option>
+<option>German (Deutsch)</option>
+<option>French (Français)</option>
+<option>Japanese (日本語)</option>
+</select>
+</div>
+</div>
+<!-- Section: Audio -->
+<div class="bento-card p-8 rounded-xl space-y-8 shadow-sm">
+<div class="flex items-center gap-3 border-b border-outline-variant/10 pb-4">
+<span class="material-symbols-outlined text-primary" data-icon="mic">mic</span>
+<h4 class="text-xl font-bold font-headline">Audio Input &amp; Processing</h4>
+</div>
+<div class="space-y-6">
+<div class="space-y-3">
+<label class="text-sm font-semibold font-label text-on-surface">Input Device</label>
+<div class="flex gap-3">
+<div class="flex-1 bg-surface-container-highest p-4 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="keyboard_voice">keyboard_voice</span>
+<span class="text-sm">Built-in MacBook Microphone</span>
+</div>
+<span class="text-primary text-xs font-bold uppercase tracking-widest">Active</span>
+</div>
+<button class="bg-surface-container-highest px-4 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-semibold font-label">Microphone Gain</label>
+<span class="text-xs font-mono text-primary">+12dB</span>
+</div>
+<input class="w-full" max="100" min="0" type="range" value="65"/>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-semibold font-label">Noise Suppression</label>
+<span class="text-xs font-mono text-primary">Aggressive</span>
+</div>
+<input class="w-full" max="100" min="0" type="range" value="85"/>
+</div>
+</div>
+<div class="p-4 bg-surface-container-highest/50 rounded-lg border border-outline-variant/10 flex items-center gap-4">
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden flex gap-0.5">
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-primary w-2"></div>
+<div class="h-full bg-surface-container-high flex-1"></div>
+</div>
+<span class="text-[10px] font-mono text-on-surface-variant uppercase">Input Level</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sidebar Sections: AI & Storage -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- AI Model Management -->
+<div class="bento-card p-6 rounded-xl space-y-6">
+<div class="flex items-center justify-between border-b border-outline-variant/10 pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="neurology">neurology</span>
+<h4 class="font-bold font-headline">AI Core</h4>
+</div>
+<span class="text-[10px] px-2 py-0.5 bg-primary/10 text-primary rounded-full font-bold uppercase">Pro</span>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface-container-highest rounded-lg space-y-2 border-l-4 border-primary">
+<div class="flex justify-between items-start">
+<span class="text-sm font-bold">Whisper-v3 Large</span>
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-tight">Highest accuracy, requires cloud processing for optimal speed.</p>
+</div>
+<div class="p-4 bg-surface-container-high rounded-lg space-y-2 border border-outline-variant/10 hover:border-primary/30 cursor-pointer transition-all">
+<div class="flex justify-between items-start">
+<span class="text-sm font-bold text-on-surface-variant">Local Scribe 2.0</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-tight">Offline processing, perfect for sensitive data. 94% accuracy.</p>
+</div>
+<button class="w-full py-2 text-sm text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                                Manage Models
+                            </button>
+</div>
+</div>
+<!-- Storage Management -->
+<div class="bento-card p-6 rounded-xl space-y-6">
+<div class="flex items-center gap-2 border-b border-outline-variant/10 pb-3">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="database">database</span>
+<h4 class="font-bold font-headline">Cloud Storage</h4>
+</div>
+<div class="space-y-4">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-label">
+<span class="text-on-surface-variant">Usage</span>
+<span class="text-on-surface">14.2 GB / 50 GB</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[28%]"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/5">
+<span class="text-xs text-on-surface-variant">Audio Files</span>
+<span class="text-xs font-mono">12.4 GB</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/5">
+<span class="text-xs text-on-surface-variant">Transcripts</span>
+<span class="text-xs font-mono">0.8 GB</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-xs text-on-surface-variant">Metadata</span>
+<span class="text-xs font-mono">1.0 GB</span>
+</div>
+</div>
+<button class="w-full bg-surface-container-high py-3 rounded-lg text-sm font-semibold hover:bg-surface-container-highest transition-colors active:scale-95 duration-200">
+                                Optimize Storage
+                            </button>
+</div>
+</div>
+<!-- Security Banner -->
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-container/40 to-surface-container-low p-6 border border-primary/20">
+<div class="relative z-10 space-y-3">
+<span class="material-symbols-outlined text-primary" data-icon="shield">shield</span>
+<h5 class="text-sm font-bold">End-to-End Encryption</h5>
+<p class="text-xs text-on-surface-variant leading-relaxed">Your audio never leaves your device unencrypted. Privacy is our primary directive.</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[100px]" data-icon="lock">lock</span>
+</div>
+</div>
+</aside>
+</div>
+<!-- Footer Actions -->
+<div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-outline-variant/10 gap-6">
+<div class="flex items-center gap-6">
+<button class="text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors">Privacy Policy</button>
+<button class="text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors">Documentation</button>
+<button class="text-sm font-semibold text-error hover:text-error/80 transition-colors">Reset All Settings</button>
+</div>
+<div class="flex items-center gap-4 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-8 py-3 rounded-lg font-semibold bg-surface-container-highest hover:bg-surface-bright transition-colors">Discard</button>
+<button class="flex-1 md:flex-none px-8 py-3 rounded-lg font-semibold bg-gradient-to-br from-primary to-primary-container text-on-primary active:scale-95 transition-transform">Save Changes</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button (Suppressed on Settings Page as per Shell Visibility Rules) -->
+<!-- Bottom Navbar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-[#0c0e10]/90 backdrop-blur-lg grid grid-cols-4 h-16 z-50">
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[10px] font-label">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-[10px] font-label">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="text-[10px] font-label">Spaces</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] font-label font-bold">Settings</span>
+</a>
+</nav>
+</body></html>

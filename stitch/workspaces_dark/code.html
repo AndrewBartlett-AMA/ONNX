@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workspaces - Quiet Scribe</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#adc6ff",
+                        "tertiary": "#e1dcfd",
+                        "on-tertiary-container": "#47445f",
+                        "surface-bright": "#252d33",
+                        "surface-container-low": "#111416",
+                        "on-primary-fixed-variant": "#0057bd",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-highest": "#20262c",
+                        "secondary-fixed": "#e2e2e9",
+                        "surface-container-high": "#1b2025",
+                        "on-error": "#490106",
+                        "primary": "#adc6ff",
+                        "outline": "#70767c",
+                        "error-dim": "#bb5551",
+                        "secondary-dim": "#9d9da4",
+                        "surface-dim": "#0c0e10",
+                        "surface-container": "#161a1e",
+                        "on-primary": "#003d88",
+                        "on-primary-container": "#bdd0ff",
+                        "on-background": "#e0e6ed",
+                        "secondary": "#9d9da4",
+                        "on-secondary-fixed-variant": "#5a5b61",
+                        "on-secondary": "#1e2025",
+                        "surface": "#0c0e10",
+                        "on-surface-variant": "#a6acb2",
+                        "tertiary-fixed-dim": "#c5c0e0",
+                        "secondary-fixed-dim": "#d4d4db",
+                        "on-tertiary-fixed-variant": "#504e69",
+                        "error": "#ee7d77",
+                        "primary-fixed-dim": "#c3d4ff",
+                        "outline-variant": "#42494e",
+                        "surface-variant": "#20262c",
+                        "inverse-on-surface": "#535557",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#003c86",
+                        "secondary-container": "#3a3b41",
+                        "on-error-container": "#ff9993",
+                        "on-tertiary": "#504d68",
+                        "tertiary-fixed": "#d3ceef",
+                        "on-secondary-fixed": "#3e3f45",
+                        "error-container": "#7f2927",
+                        "inverse-surface": "#f9f9fc",
+                        "on-tertiary-fixed": "#34314b",
+                        "tertiary-dim": "#c5c0e0",
+                        "on-secondary-container": "#bebfc5",
+                        "primary-container": "#004395",
+                        "tertiary-container": "#d3ceef",
+                        "primary-dim": "#98b8ff",
+                        "on-surface": "#e0e6ed",
+                        "background": "#0c0e10",
+                        "inverse-primary": "#005bc4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0c0e10; color: #e0e6ed; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .bg-gradient-primary { background: linear-gradient(135deg, #adc6ff 0%, #004395 100%); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary/30">
+<!-- TopNavBar (JSON Execution) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0c0e10]/70 backdrop-blur-md shadow-xl shadow-black/40">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-slate-50 font-headline tracking-tight">Quiet Scribe</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-4">
+<button class="text-slate-400 hover:bg-slate-800/50 transition-colors px-3 py-1.5 rounded-lg text-sm font-medium">Export</button>
+<button class="bg-gradient-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold active:scale-95 duration-200">New Recording</button>
+</div>
+<div class="flex items-center gap-3 text-slate-400">
+<span class="material-symbols-outlined text-lg">sync</span>
+<span class="material-symbols-outlined text-lg">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-lg">battery_full</span>
+</div>
+</div>
+</header>
+<!-- SideNavBar (JSON Execution) -->
+<aside class="fixed left-0 top-0 h-screen hidden md:flex flex-col py-6 space-y-2 bg-[#0c0e10] w-64 z-40 border-r border-outline-variant/10">
+<div class="px-6 mb-8 mt-16">
+<h1 class="text-lg font-black tracking-tighter text-slate-50 font-headline">Quiet Scribe</h1>
+<p class="text-xs text-on-surface-variant">Deep Focus Mode</p>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all font-manrope text-sm" href="#">
+<span class="material-symbols-outlined">home</span>
+                Home
+            </a>
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all font-manrope text-sm" href="#">
+<span class="material-symbols-outlined">history</span>
+                Timeline
+            </a>
+<!-- Active Tab: Workspaces -->
+<a class="flex items-center gap-3 bg-[#004395] text-[#adc6ff] rounded-lg px-4 py-3 mx-2 font-manrope text-sm font-bold" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+                Workspaces
+            </a>
+<a class="flex items-center gap-3 text-slate-400 px-4 py-3 mx-2 hover:bg-slate-800/30 rounded-lg transition-all font-manrope text-sm" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full flex items-center justify-center gap-2 bg-surface-container-high text-on-surface py-3 rounded-lg hover:bg-white/5 transition-all text-sm font-semibold">
+<span class="material-symbols-outlined">add</span>
+                New Entry
+            </button>
+<div class="mt-6 flex items-center gap-3 px-2">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant/20" data-alt="close-up portrait of a woman with professional lighting in a modern dark studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACYn6676ZmR6E0LxYjC7sp_DzkAfp9-pLsC1D1-uKqCeUyiicXsmvmM8ufP3RR5LHLNw4qudz84Mt1yqqmKFuP-oE4kPkIX7JxboWc7bssB5Z3QKCrN72H9hL3yBCRT4A5fs7YLP1mYhsgouQiOA6kQJ-swOKNPpaSrtoNk_esxH2IjMPBc1oXXkyaqjwae4465f-nccneP9HFnn1vN3GGJQE3G_fukdwetfks2sgqt8KVuxxl5C9S6lICO__YySo6ROtZgNtvqItB"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Alex Rivera</p>
+<p class="text-xs text-on-surface-variant truncate">Premium Member</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 pb-12 px-6 md:px-12">
+<header class="max-w-7xl mx-auto mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<h2 class="text-4xl md:text-5xl font-extrabold font-headline tracking-tight text-on-surface">Workspaces</h2>
+<p class="text-on-surface-variant max-w-lg text-lg leading-relaxed">Organize your thoughts, recordings, and transcriptions into dedicated environments for focus.</p>
+</div>
+<button class="bg-gradient-primary text-on-primary font-bold px-6 py-3 rounded-xl flex items-center gap-2 active:scale-95 duration-200 shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">add_circle</span>
+                New Workspace
+            </button>
+</header>
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Workspace Card: Engineering -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high cursor-pointer overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1">Engineering</h3>
+<p class="text-sm text-on-surface-variant mb-8 line-clamp-2">Sprint reviews, architecture brainstorming, and technical documentation recordings.</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="professional portrait of a man in a black turtleneck against a dark grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVwqZ7i4JLL9O4A4vKGMueptP_0PS3ofXa5HPbe6Q3tS_ihr4FGGHTR1ryPs3PYW4mx7wielAykMECtlBczsRxqynWme6vXfrCCyvr6j9BJlAbNnSSUR_tOz91cQSqjA8C7JuzTqA2QeS8LdNwfE0jd4qWeqH4gm50bqWs18Ie61zUv3D1Kyki02ninhAvo9m_Wu_G13BeZ1q7l-voLX6hAWpwoPZEereENH7cvP0ffDeJYyYcb1rjZSGlIprY5WhUIh3eEXIZCMQH"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="studio portrait of a smiling woman with glasses and dark hair against a neutral backdrop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe4cw6ScE5tkLB88KIilEnCW3d_yWjXB1seutHfC5LpjjbvXjpVGd_xpVNtevhwUfNna7MSJaqWlAeLrxMKApW5bepS7EYtu2ZcuyzpO1ETjwKoDe9JbeNRH6BLFJc1cUIq6vgcbPvgPW1fYG8zEkMphLmO6B53XvWEP098Qn4zuIc7mG7jJvIegEzUv5A1Yb4S1CfZOI3Q8sTcvLMFJe9c3UI2iQbuL6XMH1jSMedqP74KVRsgmoMaiEZ3CC-pWfXh6E6OKMZciNt"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="clean headshot of a man with short hair and a thoughtful expression in muted lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByBBXreYuBt5l-zKlVQB7_jlZzQ240o2GZvtueNIbgt2QGlJWegidG8OQFLxqViSRUGNfszCB4owpaLYY1Lq2coEuxZeQzaElqQvLjoOPLLHgGn1-6WG04Qk7bfL9X_A-5MmoaQr2Kz5jukRAgCTiMoHQ1wIIXpJXhNUOqibhdlVFAxRV-P28w2tKsWWepNTNwrXBpHHHlyezdFa1duqpnx5FdGpnpnmuOgjb90NmtgSI3uG22PWNVjt2dc_bRSRi5lXUJZMJIh9_0"/>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+2</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">description</span> 24</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">mic</span> 12</span>
+</div>
+</div>
+</div>
+<!-- Workspace Card: Marketing -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high cursor-pointer overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">campaign</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1">Marketing</h3>
+<p class="text-sm text-on-surface-variant mb-8 line-clamp-2">Campaign strategies, brand voice exploration, and weekly sync notes.</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="businesswoman in professional attire looking confidently at the camera in a modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAddtBjXK7aPdUorqAEfJ5madUyc0hJgniSowSPDOs3g43YFuyCWpCb3gYZ81mwLxCp1SomJDQ5ymRx74t6d7W2Pv4UaDk5-1tlaye-89E0FJXjtQyyQB1u4QA9E8pLYmFogvwx_y1UBRI7R412GdsDH6VZis5csaD3u1qwbk3mfPiIxPFk4z3-7RGFX6mdMYc3Ioo5Nq886RSPKMaLdHa5o6YvWIrx71ua374wdC1dAWCTNcwEpCGAqUecrjfaiGFV7ZUh1Qkif1_C"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="creative professional with artistic aesthetic posing in a sunlit interior studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDFDfqXRJRrR-maXm_z9hrohxUgk8yjqcB-VUkFWZ6vlUaflqRXeo9ucq-ol9uQK-4QSFjn1ZA8P9pJsQkPI04E8rMKCaIlNgUXjqrSqwwGs8g581ynhAsdrdA5DQx0YfQZ0LQWzvvaQMGeQR7pain_Yya-uVD3X2MQSHX8LiDY2vzIXZSIXS2qZgfhGXzbu74oV6eBqSVheUQgNhJd3EIgEuoGV7S38wbOYV4ItVqzIZuiB0PI9SFQbdS-pYL3EFjZZHCUKh2Izgy"/>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">description</span> 8</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">mic</span> 42</span>
+</div>
+</div>
+</div>
+<!-- Workspace Card: Personal -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high cursor-pointer overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<div class="w-12 h-12 rounded-lg bg-error/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1">Personal</h3>
+<p class="text-sm text-on-surface-variant mb-8 line-clamp-2">Daily journals, dream logging, and personal growth reflections.</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="close-up portrait of a woman with professional lighting in a modern dark studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5_1CoUL7wV-revE5mbQdtHyqdZ8ViPHVGbj6mj4bz4KFMiqVOTCjAmp1o8OYeYiAMTUczEcXIMhpkBTGBD6BzG0WR_8wfIwS-hI2wg5Qn5GNlvDarQnveGnGWoaKki0Bed95_SylA9KPV2O4jvkvq5u3wQXMye3sDzuhhC0PI7vWoSmL-F4k52Eo0hHd_wkFJi8F7xO0HW-RuR6zpPcJVxpxEkcycBKSuayt0-mjHfEyu85tj7eUPIe7yVg3oseNLGlbatPr7wWT-"/>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">description</span> 156</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">mic</span> 88</span>
+</div>
+</div>
+</div>
+<!-- Workspace Card: Product Design -->
+<div class="group relative bg-surface-container-low rounded-xl p-6 transition-all hover:bg-surface-container-high cursor-pointer overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</div>
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">draw</span>
+</div>
+<h3 class="text-xl font-bold font-headline mb-1">Product Design</h3>
+<p class="text-sm text-on-surface-variant mb-8 line-clamp-2">User interview transcriptions and design critique session notes.</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="young professional woman with natural hair and minimalist accessories posing in soft daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVLumd_XfLunmgKlv2Es-0-y-6cPwa_cX7ZfNsDXy5pdO8n7C0hW_Hu2ppOVV7bocO0y0I1nmMjEGZby5yUCu-IXNRlO_xnKjhqlKSrLrSLSyoJj9kqXhKTJ0e3d39EYjHeevdGzO3HaxSa0or2U_Rl9I9lFScdDdTYoxAGD1S1mCABji5w1K99bWmP2wrA5R09QKL6Cd7txm1xHzk08gSF3TbYEo4SlbZBsT6HbrARUgt3eaAq4HeAMiFHPPFDTlHQPJfURgeH8Kq"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface-container-low" data-alt="man in business casual attire standing in a modern office with blurred architectural elements behind" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf-BT12sXhHv-bY0WNpaPGCgv3krc4ORt13IsQ8skAVZwXrT0cH-oCf1O2uOPGkjWgeNEpJLm56cqhYOR3wEwXaBmpCoMYlAtYmAwqpiwcjFcVDzbRXkRkgcB4ggpsI68TnvT1e_fAQriqCdqXuXkvFdzcvxBw7YoK1TUaZsaUKZJiWA0G-yNZW-uNyUHIWCwbV6ka59XAc0PeSY9fAPdXf9Ttfs67ld1pjbRQLrFQklLA4_sXCYqE844lolZjmMm-HKDOnTY0usjj"/>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">description</span> 32</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">mic</span> 18</span>
+</div>
+</div>
+</div>
+<!-- Empty State / Add New Card -->
+<div class="group border-2 border-dashed border-outline-variant/30 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors cursor-pointer bg-transparent">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-4 group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">add</span>
+</div>
+<h3 class="text-sm font-bold text-on-surface-variant group-hover:text-on-surface">Create Workspace</h3>
+<p class="text-xs text-on-surface-variant mt-1">Start a new project folder</p>
+</div>
+</div>
+<!-- Featured Section (Bento Grid Item) -->
+<section class="max-w-7xl mx-auto mt-16">
+<div class="bg-surface-container rounded-2xl overflow-hidden flex flex-col md:flex-row border border-outline-variant/10">
+<div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+<span class="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4 uppercase tracking-wider">New Feature</span>
+<h2 class="text-3xl font-bold font-headline mb-4">Workspace Analytics</h2>
+<p class="text-on-surface-variant mb-8 leading-relaxed">Get insights into your cognitive patterns. See which workspaces command most of your focus time and track your productivity trends over the month.</p>
+<div class="flex items-center gap-4">
+<button class="bg-surface-container-highest text-on-surface px-6 py-2.5 rounded-lg font-semibold hover:bg-white/5 transition-all">View Insights</button>
+<a class="text-primary font-bold text-sm flex items-center gap-1" href="#">Learn more <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+</div>
+</div>
+<div class="md:w-1/2 relative min-h-[300px]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60" data-alt="abstract data visualization with glowing blue lines and charts on a dark interface background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHHcDqwNMvrXiiH0wtSQGGB4RHcFTkO15J-H8ws8BjUs041L0YplFvbOSMGgBTBAh3yvbO0H5-_rBXXEpr_zvCdkeL9DMHpLeiBLrcLA4BcaFQNh8F-DzHQDw93TBaBWBE0GVPdMCGvu6CsvKv6t_3ce3FGpk9T_s7_jPPtO7DtrDNUZ3ous_2w3N3-cMAW8dkmOHMMJndSInbv1uJ5gP4Jc44Kg4XbdeCS2ffyY9KW9FUSLVxldQr_VGt06fU6qO-O4SQcYhJfSll"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container to-transparent"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-[#0c0e10]/80 backdrop-blur-lg flex justify-around items-center h-20 px-4 z-50 border-t border-outline-variant/10">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">history</span>
+<span class="text-[10px] font-bold">Timeline</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-[#adc6ff]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="text-[10px] font-bold">Workspaces</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</button>
+</nav>
+</body></html>
