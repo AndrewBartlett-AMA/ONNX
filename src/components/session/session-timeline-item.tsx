@@ -17,6 +17,7 @@ interface SessionTimelineItemProps {
   onUpdateTranscript: (itemId: string, text: string) => void
   onUpdateNote: (noteId: string, content: string) => void
   onToggleTag: (itemType: 'transcript' | 'note', itemId: string, tagId: string) => void
+  onPromptTag: (itemType: 'transcript' | 'note', itemId: string, tagId: string) => void
   onDragStart: (entryId: string) => void
   onDragEnd: () => void
 }
@@ -93,6 +94,16 @@ function AttachmentTimelineItem({
                 ? 'PDF attached to the session timeline. Preview is deferred until the document panel is implemented.'
                 : 'Attachment captured in the local session store.'}
             </p>
+            {attachment.kind === 'pdf' && attachmentUrl ? (
+              <a
+                href={attachmentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#eef4ff]"
+              >
+                Open PDF
+              </a>
+            ) : null}
           </div>
         )}
       </div>
@@ -106,6 +117,7 @@ export function SessionTimelineItem({
   onUpdateTranscript,
   onUpdateNote,
   onToggleTag,
+  onPromptTag,
   onDragStart,
   onDragEnd
 }: SessionTimelineItemProps) {
@@ -153,6 +165,17 @@ export function SessionTimelineItem({
               onToggleTag={(tagId) => onToggleTag('note', note.id, tagId)}
             />
           </div>
+          {note.tagIds.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {tags
+                .filter((tag) => note.tagIds.includes(tag.id))
+                .map((tag) => (
+                  <button key={tag.id} type="button" onClick={() => onPromptTag('note', note.id, tag.id)}>
+                    <Badge>{`${tag.emoji} ${tag.name}`}</Badge>
+                  </button>
+                ))}
+            </div>
+          ) : null}
           <Textarea
             value={note.content}
             onChange={(event) => onUpdateNote(note.id, event.target.value)}
@@ -191,7 +214,9 @@ export function SessionTimelineItem({
             </div>
             <div className="flex items-center gap-2">
               {selectedTags.map((tag) => (
-                <Badge key={tag.id}>{`${tag.emoji} ${tag.name}`}</Badge>
+                <button key={tag.id} type="button" onClick={() => onPromptTag('transcript', transcript.id, tag.id)}>
+                  <Badge>{`${tag.emoji} ${tag.name}`}</Badge>
+                </button>
               ))}
               <TagPicker
                 tags={tags}

@@ -17,9 +17,13 @@ export function useRuntimeStatus() {
     }
 
     void loadRuntimeSnapshot()
+    const interval = window.setInterval(() => {
+      void loadRuntimeSnapshot()
+    }, 1500)
 
     return () => {
       cancelled = true
+      window.clearInterval(interval)
     }
   }, [])
 

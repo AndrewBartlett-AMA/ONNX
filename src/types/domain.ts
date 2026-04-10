@@ -2,7 +2,7 @@ import type { RuntimeId } from '@/types/transcription'
 
 export type EntityId = string
 export type ISODateString = string
-export type OutputFormat = 'txt' | 'md' | 'json' | 'srt'
+export type OutputFormat = 'txt' | 'md' | 'html' | 'json' | 'srt'
 export type SessionSource = 'microphone' | 'system-audio' | 'upload'
 export type SessionStatus = 'draft' | 'recording' | 'processing' | 'completed' | 'failed'
 export type NoteKind = 'summary' | 'decision' | 'action-item' | 'highlight' | 'freeform'
@@ -95,6 +95,7 @@ export interface Output extends BaseEntity {
   name: string
   generatedAt: ISODateString
   size?: number
+  content?: string
   contentPreview?: string
 }
 

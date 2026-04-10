@@ -66,9 +66,29 @@ interface AppDataContextValue {
   createSession: (overrides?: Partial<Session>) => Promise<Session>
   createSessionFromUpload: (file: File) => Promise<Session>
   updateSession: (sessionId: string, patch: Partial<Session>) => Promise<void>
+  addTranscriptItem: (
+    sessionId: string,
+    input: Pick<TranscriptItem, 'text'> &
+      Partial<
+        Pick<
+          TranscriptItem,
+          'speakerLabel' | 'occurredAt' | 'tagIds' | 'startedAtMs' | 'endedAtMs' | 'confidence'
+        >
+      >
+  ) => Promise<TranscriptItem>
   updateTranscriptItem: (itemId: string, patch: Partial<TranscriptItem>) => Promise<void>
+  addNote: (
+    sessionId: string,
+    input?: Partial<
+      Pick<Note, 'title' | 'content' | 'kind' | 'occurredAt' | 'transcriptItemIds' | 'tagIds'>
+    >
+  ) => Promise<Note>
   updateNote: (noteId: string, patch: Partial<Note>) => Promise<void>
   addManualNote: (sessionId: string) => Promise<Note>
+  addOutput: (
+    sessionId: string,
+    input: Pick<Output, 'format' | 'name'> & Partial<Pick<Output, 'content' | 'contentPreview' | 'size'>>
+  ) => Promise<Output>
   addAttachmentFiles: (sessionId: string, files: File[]) => Promise<Attachment[]>
   toggleTagOnItem: (
     itemType: 'transcript' | 'note',
@@ -317,6 +337,74 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
+  const addTranscriptItem = useCallback(
+    async (
+      sessionId: string,
+      input: Pick<TranscriptItem, 'text'> &
+        Partial<
+          Pick<
+            TranscriptItem,
+            'speakerLabel' | 'occurredAt' | 'tagIds' | 'startedAtMs' | 'endedAtMs' | 'confidence'
+          >
+        >
+    ) => {
+      const timestamp = input.occurredAt ?? new Date().toISOString()
+      const session = state.sessions.find((item) => item.id === sessionId)
+      const currentItems = state.transcriptItems.filter((item) => item.sessionId === sessionId)
+      const transcriptItem: TranscriptItem = {
+        id: crypto.randomUUID(),
+        sessionId,
+        sequence: currentItems.length + 1,
+        text: input.text,
+        speakerLabel: input.speakerLabel,
+        occurredAt: timestamp,
+        tagIds: input.tagIds ?? [],
+        startedAtMs: input.startedAtMs,
+        endedAtMs: input.endedAtMs,
+        confidence: input.confidence,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+
+      await storage.transcriptItems.put(transcriptItem)
+
+      setState((current) => {
+        const nextSession = current.sessions.find((item) => item.id === sessionId)
+
+        if (!nextSession) {
+          return current
+        }
+
+        const updatedSession = {
+          ...nextSession,
+          transcriptItemIds: [...nextSession.transcriptItemIds, transcriptItem.id],
+          updatedAt: timestamp
+        }
+
+        return {
+          ...current,
+          transcriptItems: [...current.transcriptItems, transcriptItem].sort((left, right) =>
+            left.occurredAt.localeCompare(right.occurredAt)
+          ),
+          sessions: current.sessions
+            .map((item) => (item.id === sessionId ? updatedSession : item))
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        }
+      })
+
+      if (session) {
+        await storage.sessions.put({
+          ...session,
+          transcriptItemIds: [...session.transcriptItemIds, transcriptItem.id],
+          updatedAt: timestamp
+        })
+      }
+
+      return transcriptItem
+    },
+    [state.sessions, state.transcriptItems]
+  )
+
   const updateTranscriptItem = useCallback(
     async (itemId: string, patch: Partial<TranscriptItem>) => {
       let nextItem: TranscriptItem | undefined
@@ -341,6 +429,66 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     []
   )
 
+  const addNote = useCallback(
+    async (
+      sessionId: string,
+      input: Partial<
+        Pick<Note, 'title' | 'content' | 'kind' | 'occurredAt' | 'transcriptItemIds' | 'tagIds'>
+      > = {}
+    ) => {
+      const timestamp = input.occurredAt ?? new Date().toISOString()
+      const note: Note = {
+        id: crypto.randomUUID(),
+        sessionId,
+        title: input.title ?? 'Manual note',
+        content: input.content ?? '',
+        kind: input.kind ?? 'freeform',
+        occurredAt: timestamp,
+        transcriptItemIds: input.transcriptItemIds ?? [],
+        tagIds: input.tagIds ?? [],
+        createdAt: timestamp,
+        updatedAt: timestamp
+      }
+
+      await storage.notes.put(note)
+
+      setState((current) => {
+        const session = current.sessions.find((item) => item.id === sessionId)
+
+        if (!session) {
+          return current
+        }
+
+        const nextSession = {
+          ...session,
+          noteIds: [...session.noteIds, note.id],
+          updatedAt: timestamp
+        }
+
+        return {
+          ...current,
+          notes: [...current.notes, note].sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
+          sessions: current.sessions
+            .map((item) => (item.id === sessionId ? nextSession : item))
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        }
+      })
+
+      const currentSession = state.sessions.find((item) => item.id === sessionId)
+
+      if (currentSession) {
+        await storage.sessions.put({
+          ...currentSession,
+          noteIds: [...currentSession.noteIds, note.id],
+          updatedAt: timestamp
+        })
+      }
+
+      return note
+    },
+    [state.sessions]
+  )
+
   const updateNote = useCallback(async (noteId: string, patch: Partial<Note>) => {
     let nextNote: Note | undefined
 
@@ -363,56 +511,73 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   }, [])
 
   const addManualNote = useCallback(async (sessionId: string) => {
-    const timestamp = new Date().toISOString()
-    const note: Note = {
-      id: crypto.randomUUID(),
-      sessionId,
+    return addNote(sessionId, {
       title: 'Manual note',
       content: '',
-      kind: 'freeform',
-      occurredAt: timestamp,
-      transcriptItemIds: [],
-      tagIds: [],
-      createdAt: timestamp,
-      updatedAt: timestamp
-    }
-
-    await storage.notes.put(note)
-
-    setState((current) => {
-      const session = current.sessions.find((item) => item.id === sessionId)
-
-      if (!session) {
-        return current
-      }
-
-      const nextSession = {
-        ...session,
-        noteIds: [...session.noteIds, note.id],
-        updatedAt: timestamp
-      }
-
-      return {
-        ...current,
-        notes: [...current.notes, note].sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
-        sessions: current.sessions
-          .map((item) => (item.id === sessionId ? nextSession : item))
-          .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
-      }
+      kind: 'freeform'
     })
+  }, [addNote])
 
-    const currentSession = state.sessions.find((item) => item.id === sessionId)
-
-    if (currentSession) {
-      await storage.sessions.put({
-        ...currentSession,
-        noteIds: [...currentSession.noteIds, note.id],
+  const addOutput = useCallback(
+    async (
+      sessionId: string,
+      input: Pick<Output, 'format' | 'name'> &
+        Partial<Pick<Output, 'content' | 'contentPreview' | 'size'>>
+    ) => {
+      const timestamp = new Date().toISOString()
+      const output: Output = {
+        id: crypto.randomUUID(),
+        sessionId,
+        format: input.format,
+        name: input.name,
+        generatedAt: timestamp,
+        size: input.size,
+        content: input.content,
+        contentPreview: input.contentPreview,
+        createdAt: timestamp,
         updatedAt: timestamp
-      })
-    }
+      }
 
-    return note
-  }, [state.sessions])
+      await storage.outputs.put(output)
+
+      setState((current) => {
+        const session = current.sessions.find((item) => item.id === sessionId)
+
+        if (!session) {
+          return current
+        }
+
+        const nextSession = {
+          ...session,
+          outputIds: [...session.outputIds, output.id],
+          updatedAt: timestamp
+        }
+
+        return {
+          ...current,
+          outputs: [output, ...current.outputs].sort((left, right) =>
+            right.generatedAt.localeCompare(left.generatedAt)
+          ),
+          sessions: current.sessions
+            .map((item) => (item.id === sessionId ? nextSession : item))
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        }
+      })
+
+      const currentSession = state.sessions.find((item) => item.id === sessionId)
+
+      if (currentSession) {
+        await storage.sessions.put({
+          ...currentSession,
+          outputIds: [...currentSession.outputIds, output.id],
+          updatedAt: timestamp
+        })
+      }
+
+      return output
+    },
+    [state.sessions]
+  )
 
   const addAttachmentFiles = useCallback(
     async (sessionId: string, files: File[]) => {
@@ -543,15 +708,21 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       createSession,
       createSessionFromUpload,
       updateSession,
+      addTranscriptItem,
       updateTranscriptItem,
+      addNote,
       updateNote,
       addManualNote,
+      addOutput,
       addAttachmentFiles,
       toggleTagOnItem
     }),
     [
       addAttachmentFiles,
       addManualNote,
+      addNote,
+      addOutput,
+      addTranscriptItem,
       createSession,
       createSessionFromUpload,
       getProjectsForWorkspace,

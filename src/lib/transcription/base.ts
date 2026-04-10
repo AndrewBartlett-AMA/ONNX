@@ -29,8 +29,16 @@ function getRuntimeState(supported: boolean, activeSessionId?: string): RuntimeS
   return 'idle'
 }
 
-function buildNotImplementedError(label: string, mode: 'chunk' | 'file') {
-  return new Error(`${label} ${mode} transcription is scaffolded but not implemented yet.`)
+function buildMockResult(text: string): TranscriptionResult {
+  return {
+    text,
+    segments: [
+      {
+        text,
+        confidence: 0.88
+      }
+    ]
+  }
 }
 
 export function createRuntimeAdapter({
@@ -88,10 +96,13 @@ export function createRuntimeAdapter({
       }
     },
     async transcribeChunk(_request: TranscribeChunkRequest): Promise<TranscriptionResult> {
-      throw buildNotImplementedError(label, 'chunk')
+      return buildMockResult(
+        `${label} simulated chunk ${_request.sequence}. Runtime wiring is active and ready for real audio input.`
+      )
     },
-    async transcribeFile(_request: TranscribeFileRequest): Promise<TranscriptionResult> {
-      throw buildNotImplementedError(label, 'file')
+    async transcribeFile(request: TranscribeFileRequest): Promise<TranscriptionResult> {
+      const fileName = request.fileName ?? 'audio upload'
+      return buildMockResult(`${label} simulated transcription for ${fileName}.`)
     },
     getCapabilities,
     getStatus

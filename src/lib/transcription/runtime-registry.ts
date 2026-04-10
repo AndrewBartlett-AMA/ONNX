@@ -16,6 +16,10 @@ const runtimes = {
   wasm: wasmRuntime
 } as const
 
+export function getRuntimeById(runtimeId: RuntimeId) {
+  return runtimes[runtimeId]
+}
+
 export async function getRuntimeSnapshot(): Promise<RuntimeSnapshot> {
   const capabilitiesEntries = await Promise.all(
     runtimeOrder.map(async (runtimeId) => [
