@@ -1,9 +1,35 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-ring: var(--ring);
+}
+
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #e5e7eb;
-  background: #020617;
-  line-height: 1.5;
-  font-weight: 400;
+  color-scheme: dark;
+  --background: oklch(0.17 0.015 255);
+  --foreground: oklch(0.96 0.008 255);
+  --surface: oklch(0.23 0.018 252);
+  --surface-subtle: oklch(0.27 0.018 252);
+  --border: oklch(0.36 0.02 252);
+  --muted: oklch(0.29 0.016 252);
+  --muted-foreground: oklch(0.78 0.01 252);
+  --accent: oklch(0.71 0.12 244);
+  --accent-foreground: oklch(0.18 0.02 255);
+  --success: oklch(0.66 0.12 165);
+  --success-foreground: oklch(0.17 0.015 165);
+  --ring: oklch(0.71 0.12 244);
 }
 
 * {
@@ -14,77 +40,25 @@ html,
 body,
 #root {
   min-height: 100%;
-  margin: 0;
 }
 
 body {
-  min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-sans);
   background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 28%),
-    linear-gradient(180deg, #0f172a 0%, #020617 100%);
+    radial-gradient(circle at top, rgba(114, 174, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, #121722 0%, #0d1118 100%);
+  color: var(--foreground);
 }
 
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 2rem;
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
-.hero-card {
-  width: min(100%, 960px);
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 24px;
-  padding: 2rem;
-  backdrop-filter: blur(18px);
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
-}
-
-.badge {
-  display: inline-flex;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(59, 130, 246, 0.15);
-  color: #bfdbfe;
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-h1,
-h2,
-p,
-ul,
-ol {
-  margin-top: 0;
-}
-
-h1 {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 1.05;
-  margin-bottom: 1rem;
-}
-
-p {
-  max-width: 70ch;
-  color: #cbd5e1;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.panel {
-  padding: 1.25rem;
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-li + li {
-  margin-top: 0.5rem;
+a {
+  color: inherit;
+  text-decoration: none;
 }

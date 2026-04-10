@@ -1,5 +1,7 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const repository = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? 'QuietScribe-Web-Granite'
@@ -7,8 +9,14 @@ const base = process.env.GITHUB_ACTIONS === 'true' ? `/${repository}/` : '/'
 
 export default defineConfig({
   base,
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
