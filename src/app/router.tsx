@@ -20,8 +20,5 @@ export const router = createHashRouter(
         { path: 'session/:sessionId', element: <SessionPage /> }
       ]
     }
-  ],
-  {
-    basename: import.meta.env.BASE_URL
-  }
+  ]
 )
