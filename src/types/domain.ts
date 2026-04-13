@@ -1,4 +1,5 @@
 import type { RuntimeId } from '@/types/transcription'
+import type { TranscriptionTargetType } from '@/types/settings'
 
 export type EntityId = string
 export type ISODateString = string
@@ -42,6 +43,9 @@ export interface Session extends BaseEntity {
   source: SessionSource
   status: SessionStatus
   runtime: RuntimeId
+  targetType: TranscriptionTargetType
+  targetId?: string
+  providerProfileId?: string
   modelId?: string
   participantNames: string[]
   audioSources: string[]

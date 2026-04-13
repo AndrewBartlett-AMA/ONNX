@@ -40,7 +40,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'service-worker.ts',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,wasm,json}']
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,json}']
       },
       manifest: {
         id: './',

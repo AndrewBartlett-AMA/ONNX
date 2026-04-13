@@ -13,25 +13,43 @@ export function HomePage() {
   const audioInputRef = useRef<HTMLInputElement | null>(null)
   const [isPending, startTransition] = useTransition()
   const {
+    appSettings,
     createSession,
     createSessionFromUpload,
-    modelOptions,
+    localModelEntries,
+    providerProfiles,
     sessions,
-    setSelectedModelId,
+    setActiveTargetType,
+    setSelectedHostedModel,
+    setSelectedLocalModelId,
+    setSelectedProviderProfileId,
     uiPreferences,
     workspaces
   } = useAppData()
   const { canInstall, promptToInstall } = usePwaInstall()
 
   const recentSessions = sessions.slice(0, 4)
+  const selectedLocalModel = localModelEntries.find((model) => model.id === appSettings.selectedLocalModelId)
+  const selectedProvider = providerProfiles.find(
+    (profile) => profile.id === appSettings.selectedProviderProfileId
+  )
 
   function handleNewRecording() {
     startTransition(() => {
       void createSession({
         title: 'New recording',
-        source: 'microphone',
-        audioSources: ['Microphone'],
-        modelId: uiPreferences.selectedModelId
+        source: uiPreferences.systemAudioEnabled ? 'system-audio' : 'microphone',
+        audioSources: uiPreferences.systemAudioEnabled ? ['System audio'] : ['Microphone'],
+        targetType: appSettings.activeTargetType,
+        targetId:
+          appSettings.activeTargetType === 'hosted'
+            ? appSettings.selectedProviderProfileId
+            : appSettings.selectedLocalModelId,
+        providerProfileId: appSettings.selectedProviderProfileId,
+        modelId:
+          appSettings.activeTargetType === 'hosted'
+            ? appSettings.selectedHostedModel || selectedProvider?.model || ''
+            : selectedLocalModel?.repoId
       }).then((session) => navigate(`/session/${session.id}`))
     })
   }
@@ -89,22 +107,61 @@ export function HomePage() {
           <div className="mt-10 grid gap-4 md:grid-cols-[0.85fr_1.15fr]">
             <div className="rounded-[1.5rem] bg-surface-subtle p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                Model selector
+                Transcription target
               </p>
               <select
-                value={uiPreferences.selectedModelId}
-                onChange={(event) => setSelectedModelId(event.target.value)}
+                value={appSettings.activeTargetType}
+                onChange={(event) => setActiveTargetType(event.target.value as 'local' | 'hosted')}
                 className="mt-3 h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-foreground outline-none"
               >
-                {modelOptions.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.label}
-                  </option>
-                ))}
+                <option value="local">Local browser model</option>
+                <option value="hosted">Hosted provider</option>
               </select>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                {modelOptions.find((model) => model.id === uiPreferences.selectedModelId)?.description}
-              </p>
+
+              {appSettings.activeTargetType === 'local' ? (
+                <>
+                  <select
+                    value={appSettings.selectedLocalModelId}
+                    onChange={(event) => setSelectedLocalModelId(event.target.value)}
+                    className="mt-3 h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-foreground outline-none"
+                  >
+                    {localModelEntries.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {selectedLocalModel?.description ?? 'Select a browser-local Whisper model.'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <select
+                    value={appSettings.selectedProviderProfileId ?? ''}
+                    onChange={(event) => setSelectedProviderProfileId(event.target.value || undefined)}
+                    className="mt-3 h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-foreground outline-none"
+                  >
+                    <option value="">Choose a hosted provider</option>
+                    {providerProfiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={appSettings.selectedHostedModel ?? selectedProvider?.model ?? ''}
+                    onChange={(event) => setSelectedHostedModel(event.target.value)}
+                    placeholder="Hosted model name"
+                    className="mt-3 h-11 w-full rounded-2xl border border-border/60 bg-white px-4 text-sm text-foreground outline-none"
+                  />
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {selectedProvider
+                      ? `Requests will use ${selectedProvider.label} and the selected hosted model.`
+                      : 'Add a hosted provider profile in Settings before using this mode.'}
+                  </p>
+                </>
+              )}
             </div>
 
             <div className="rounded-[1.5rem] bg-surface-subtle p-5">

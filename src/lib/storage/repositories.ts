@@ -10,6 +10,10 @@ type StoreName =
   | 'attachments'
   | 'outputs'
   | 'tagTemplates'
+  | 'appSettings'
+  | 'providerProfiles'
+  | 'localModelEntries'
+  | 'modelCacheMeta'
 
 function createRepository<Store extends StoreName>(storeName: Store) {
   return {
@@ -57,6 +61,10 @@ const noteRepository = createRepository('notes')
 const attachmentRepository = createRepository('attachments')
 const outputRepository = createRepository('outputs')
 const tagTemplateRepository = createRepository('tagTemplates')
+const appSettingsRepository = createRepository('appSettings')
+const providerProfilesRepository = createRepository('providerProfiles')
+const localModelEntriesRepository = createRepository('localModelEntries')
+const modelCacheMetaRepository = createRepository('modelCacheMeta')
 
 export const storage = {
   workspaces: workspaceRepository,
@@ -107,6 +115,16 @@ export const storage = {
     async listByWorkspace(workspaceId: string) {
       const database = await getDatabase()
       return listByIndex(database, 'tagTemplates', 'by-workspaceId', workspaceId)
+    }
+  },
+  appSettings: appSettingsRepository,
+  providerProfiles: providerProfilesRepository,
+  localModelEntries: localModelEntriesRepository,
+  modelCacheMeta: {
+    ...modelCacheMetaRepository,
+    async listByModelEntry(modelEntryId: string) {
+      const database = await getDatabase()
+      return listByIndex(database, 'modelCacheMeta', 'by-modelEntryId', modelEntryId)
     }
   }
 }

@@ -83,9 +83,12 @@ export function SessionPage() {
     addManualNote,
     addNote,
     addOutput,
+    appSettings,
     createSession,
     getProjectsForWorkspace,
     getSessionDetail,
+    localModelEntries,
+    providerProfiles,
     sessions,
     updateNote,
     updateSession,
@@ -172,6 +175,8 @@ export function SessionPage() {
   const sessionDetail = detail
   const { session, attachments, notes, outputs, project, tags, transcriptItems, workspace } = sessionDetail
   const projects = getProjectsForWorkspace(session.workspaceId)
+  const selectedLocalModel = localModelEntries.find((entry) => entry.id === session.targetId)
+  const selectedProvider = providerProfiles.find((entry) => entry.id === session.providerProfileId)
   const fullTranscript = transcriptItems
     .map((item) => `${item.speakerLabel ?? 'Speaker'} · ${formatTime(item.occurredAt)}\n${item.text}`)
     .join('\n\n')
@@ -284,6 +289,11 @@ export function SessionPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{runtimeLabels[transcription.runtimeId]}</Badge>
+                  <Badge variant="outline">
+                    {session.targetType === 'hosted'
+                      ? selectedProvider?.label ?? 'Hosted provider'
+                      : selectedLocalModel?.label ?? 'Local model'}
+                  </Badge>
                   <Badge variant={transcription.phase === 'error' ? 'outline' : 'secondary'}>
                     {transcription.phase.toUpperCase()}
                   </Badge>
@@ -604,6 +614,33 @@ export function SessionPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                      Target type
+                    </p>
+                    <select
+                      value={session.targetType}
+                      onChange={(event) =>
+                        void updateSession(session.id, {
+                          targetType: event.target.value as 'local' | 'hosted',
+                          targetId:
+                            event.target.value === 'hosted'
+                              ? appSettings.selectedProviderProfileId
+                              : appSettings.selectedLocalModelId,
+                          providerProfileId:
+                            event.target.value === 'hosted' ? appSettings.selectedProviderProfileId : undefined,
+                          modelId:
+                            event.target.value === 'hosted'
+                              ? appSettings.selectedHostedModel || selectedProvider?.model || ''
+                              : selectedLocalModel?.repoId
+                        })
+                      }
+                      className="h-11 w-full rounded-2xl border border-border/70 bg-white px-4 text-sm outline-none"
+                    >
+                      <option value="local">Local browser model</option>
+                      <option value="hosted">Hosted provider</option>
+                    </select>
+                  </div>
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                       Workspace
                     </p>
                     <select
@@ -635,6 +672,80 @@ export function SessionPage() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {session.targetType === 'hosted' ? (
+                    <>
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                          Provider profile
+                        </p>
+                        <select
+                          value={session.providerProfileId ?? ''}
+                          onChange={(event) => {
+                            const provider = providerProfiles.find((entry) => entry.id === event.target.value)
+                            void updateSession(session.id, {
+                              providerProfileId: event.target.value || undefined,
+                              targetId: event.target.value || undefined,
+                              modelId: provider?.model ?? ''
+                            })
+                          }}
+                          className="h-11 w-full rounded-2xl border border-border/70 bg-white px-4 text-sm outline-none"
+                        >
+                          <option value="">Choose provider</option>
+                          {providerProfiles.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                          Hosted model
+                        </p>
+                        <Input
+                          value={session.modelId ?? ''}
+                          onChange={(event) => void handleSessionFieldChange('modelId', event.target.value)}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                          Local model
+                        </p>
+                        <select
+                          value={session.targetId ?? ''}
+                          onChange={(event) => {
+                            const model = localModelEntries.find((entry) => entry.id === event.target.value)
+                            void updateSession(session.id, {
+                              targetId: event.target.value,
+                              modelId: model?.repoId ?? ''
+                            })
+                          }}
+                          className="h-11 w-full rounded-2xl border border-border/70 bg-white px-4 text-sm outline-none"
+                        >
+                          {localModelEntries.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                          Model runtime
+                        </p>
+                        <div className="rounded-[1rem] bg-surface-subtle px-4 py-3 text-sm text-muted-foreground">
+                          {selectedLocalModel?.supportedRuntimeIds.map((runtime) => runtime.toUpperCase()).join(' / ') ??
+                            'No model selected'}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-3">

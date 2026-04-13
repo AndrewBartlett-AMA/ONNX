@@ -5,17 +5,33 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useAppData } from '@/hooks/use-app-data'
 import { useRuntimeStatus } from '@/hooks/use-runtime-status'
-import { modelOptions } from '@/lib/transcription/model-options'
 
 export function AppTopBar() {
   const navigate = useNavigate()
   const runtimeSnapshot = useRuntimeStatus()
-  const { createSession, uiPreferences, setMicrophoneEnabled, setSystemAudioEnabled } = useAppData()
+  const {
+    appSettings,
+    createSession,
+    localModelEntries,
+    providerProfiles,
+    uiPreferences,
+    setMicrophoneEnabled,
+    setSystemAudioEnabled
+  } = useAppData()
   const [isPending, startTransition] = useTransition()
 
-  const selectedModel = modelOptions.find((model) => model.id === uiPreferences.selectedModelId)
+  const selectedLocalModel = localModelEntries.find(
+    (model) => model.id === appSettings.selectedLocalModelId
+  )
+  const selectedProvider = providerProfiles.find(
+    (profile) => profile.id === appSettings.selectedProviderProfileId
+  )
   const preferredRuntime = runtimeSnapshot?.preferredRuntime
   const capability = preferredRuntime ? runtimeSnapshot.capabilities[preferredRuntime] : null
+  const activeTargetLabel =
+    appSettings.activeTargetType === 'hosted'
+      ? selectedProvider?.label ?? 'No provider selected'
+      : selectedLocalModel?.label ?? 'No local model selected'
 
   function handleCreateSession() {
     startTransition(() => {
@@ -25,7 +41,16 @@ export function AppTopBar() {
         audioSources: uiPreferences.systemAudioEnabled
           ? ['System audio']
           : ['Microphone'],
-        modelId: uiPreferences.selectedModelId
+        targetType: appSettings.activeTargetType,
+        targetId:
+          appSettings.activeTargetType === 'hosted'
+            ? appSettings.selectedProviderProfileId
+            : appSettings.selectedLocalModelId,
+        providerProfileId: appSettings.selectedProviderProfileId,
+        modelId:
+          appSettings.activeTargetType === 'hosted'
+            ? appSettings.selectedHostedModel || selectedProvider?.model || ''
+            : selectedLocalModel?.repoId
       }).then((session) => {
         navigate(`/session/${session.id}`)
       })
@@ -48,10 +73,14 @@ export function AppTopBar() {
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant={capability?.supported ? 'secondary' : 'outline'}>
               <Cpu className="size-3.5" />
-              {selectedModel?.label ?? 'No model selected'}
+              {activeTargetLabel}
             </Badge>
             <Badge variant={capability?.supported ? 'secondary' : 'outline'}>
-              {capability?.supported ? 'Model ready' : 'Runtime fallback'}
+              {appSettings.activeTargetType === 'hosted'
+                ? 'Hosted provider'
+                : capability?.supported
+                  ? `Ready on ${preferredRuntime?.toUpperCase()}`
+                  : 'Runtime fallback'}
             </Badge>
 
             <Button

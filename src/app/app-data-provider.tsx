@@ -18,7 +18,7 @@ import {
   seedTranscriptItems,
   seedWorkspaces
 } from '@/lib/storage/seed-data'
-import { modelOptions } from '@/lib/transcription/model-options'
+import { curatedLocalModels, defaultLocalModelId } from '@/lib/transcription/catalog'
 import type {
   Attachment,
   Note,
@@ -29,14 +29,21 @@ import type {
   TranscriptItem,
   Workspace
 } from '@/types/domain'
+import type {
+  AppSettings,
+  LocalModelEntry,
+  ModelCacheMeta,
+  ProviderProfile,
+  TranscriptionTargetType
+} from '@/types/settings'
 
 const UI_PREFERENCES_KEY = 'quiet-scribe-ui-preferences'
+const APP_SETTINGS_ID = 'app-settings'
 
-interface UiPreferences {
-  selectedModelId: string
-  microphoneEnabled: boolean
-  systemAudioEnabled: boolean
-}
+type UiPreferences = Pick<
+  AppSettings,
+  'activeTargetType' | 'selectedLocalModelId' | 'selectedProviderProfileId' | 'selectedHostedModel' | 'microphoneEnabled' | 'systemAudioEnabled' | 'remoteModelHostOverride'
+>
 
 export interface SessionDetail {
   session: Session
@@ -55,11 +62,28 @@ interface AppDataContextValue {
   projects: Project[]
   sessions: Session[]
   tags: TagTemplate[]
+  appSettings: AppSettings
   uiPreferences: UiPreferences
-  modelOptions: typeof modelOptions
-  setSelectedModelId: (modelId: string) => void
+  localModelEntries: LocalModelEntry[]
+  providerProfiles: ProviderProfile[]
+  modelCacheMeta: ModelCacheMeta[]
+  setSelectedLocalModelId: (modelId: string) => void
+  setActiveTargetType: (targetType: TranscriptionTargetType) => void
+  setSelectedProviderProfileId: (profileId?: string) => void
+  setSelectedHostedModel: (model: string) => void
   setMicrophoneEnabled: (enabled: boolean) => void
   setSystemAudioEnabled: (enabled: boolean) => void
+  setRemoteModelHostOverride: (value?: string) => void
+  saveProviderProfile: (
+    input: Omit<ProviderProfile, 'id' | 'createdAt' | 'updatedAt' | 'lastTestStatus'> &
+      Partial<Pick<ProviderProfile, 'id' | 'lastTestStatus' | 'lastTestedAt' | 'lastError'>>
+  ) => Promise<ProviderProfile>
+  removeProviderProfile: (profileId: string) => Promise<void>
+  saveLocalModelEntry: (
+    input: Pick<LocalModelEntry, 'repoId' | 'label' | 'description' | 'languageLabel'> & Partial<Pick<LocalModelEntry, 'id'>>
+  ) => Promise<LocalModelEntry>
+  removeLocalModelEntry: (modelId: string) => Promise<void>
+  replaceModelCacheMeta: (entry: ModelCacheMeta) => Promise<void>
   getSessionDetail: (sessionId: string) => SessionDetail | undefined
   getProjectsForWorkspace: (workspaceId: string) => Project[]
   getSessionsForProject: (projectId: string) => Session[]
@@ -76,6 +100,7 @@ interface AppDataContextValue {
         >
       >
   ) => Promise<TranscriptItem>
+  clearTranscriptItems: (sessionId: string) => Promise<void>
   updateTranscriptItem: (itemId: string, patch: Partial<TranscriptItem>) => Promise<void>
   addNote: (
     sessionId: string,
@@ -106,31 +131,50 @@ interface AppDataState {
   attachments: Attachment[]
   outputs: Output[]
   tags: TagTemplate[]
+  appSettings: AppSettings
+  localModelEntries: LocalModelEntry[]
+  providerProfiles: ProviderProfile[]
+  modelCacheMeta: ModelCacheMeta[]
 }
 
-const defaultUiPreferences: UiPreferences = {
-  selectedModelId: modelOptions[0].id,
+const defaultAppSettings: AppSettings = {
+  id: APP_SETTINGS_ID,
+  activeTargetType: 'local',
+  selectedLocalModelId: defaultLocalModelId,
+  selectedHostedModel: '',
   microphoneEnabled: true,
-  systemAudioEnabled: false
+  systemAudioEnabled: false,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 }
 
 const AppDataContext = createContext<AppDataContextValue | null>(null)
 
-function readUiPreferences(): UiPreferences {
+function readLegacyUiPreferences(): Partial<UiPreferences> {
   if (typeof window === 'undefined') {
-    return defaultUiPreferences
+    return {}
   }
 
   const stored = window.localStorage.getItem(UI_PREFERENCES_KEY)
 
   if (!stored) {
-    return defaultUiPreferences
+    return {}
   }
 
   try {
-    return { ...defaultUiPreferences, ...(JSON.parse(stored) as Partial<UiPreferences>) }
+    const legacy = JSON.parse(stored) as {
+      selectedModelId?: string
+      microphoneEnabled?: boolean
+      systemAudioEnabled?: boolean
+    }
+
+    return {
+      selectedLocalModelId: legacy.selectedModelId ?? defaultLocalModelId,
+      microphoneEnabled: legacy.microphoneEnabled ?? true,
+      systemAudioEnabled: legacy.systemAudioEnabled ?? false
+    }
   } catch {
-    return defaultUiPreferences
+    return {}
   }
 }
 
@@ -143,7 +187,11 @@ function createEmptyState(): AppDataState {
     notes: [],
     attachments: [],
     outputs: [],
-    tags: []
+    tags: [],
+    appSettings: defaultAppSettings,
+    localModelEntries: [],
+    providerProfiles: [],
+    modelCacheMeta: []
   }
 }
 
@@ -166,8 +214,46 @@ async function ensureSeedData() {
   ])
 }
 
+async function ensureTranscriptionDefaults() {
+  const existingModels = await storage.localModelEntries.list()
+  const existingModelIds = new Set(existingModels.map((entry) => entry.id))
+
+  await Promise.all(
+    curatedLocalModels
+      .filter((entry) => !existingModelIds.has(entry.id))
+      .map((entry) => storage.localModelEntries.put(entry))
+  )
+
+  const settings = await storage.appSettings.get(APP_SETTINGS_ID)
+
+  if (!settings) {
+    const migrated = readLegacyUiPreferences()
+    const timestamp = new Date().toISOString()
+    await storage.appSettings.put({
+      ...defaultAppSettings,
+      ...migrated,
+      id: APP_SETTINGS_ID,
+      updatedAt: timestamp,
+      createdAt: timestamp
+    })
+  }
+}
+
 async function loadAllData(): Promise<AppDataState> {
-  const [workspaces, projects, sessions, transcriptItems, notes, attachments, outputs, tags] =
+  const [
+    workspaces,
+    projects,
+    sessions,
+    transcriptItems,
+    notes,
+    attachments,
+    outputs,
+    tags,
+    appSettingsList,
+    localModelEntries,
+    providerProfiles,
+    modelCacheMeta
+  ] =
     await Promise.all([
       storage.workspaces.list(),
       storage.projects.list(),
@@ -176,8 +262,14 @@ async function loadAllData(): Promise<AppDataState> {
       storage.notes.list(),
       storage.attachments.list(),
       storage.outputs.list(),
-      storage.tagTemplates.list()
+      storage.tagTemplates.list(),
+      storage.appSettings.list(),
+      storage.localModelEntries.list(),
+      storage.providerProfiles.list(),
+      storage.modelCacheMeta.list()
     ])
+
+  const appSettings = appSettingsList[0] ?? defaultAppSettings
 
   return {
     workspaces: workspaces.sort((left, right) => left.name.localeCompare(right.name)),
@@ -187,7 +279,11 @@ async function loadAllData(): Promise<AppDataState> {
     notes: notes.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
     attachments: attachments.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
     outputs: outputs.sort((left, right) => right.generatedAt.localeCompare(left.generatedAt)),
-    tags: tags.sort((left, right) => left.name.localeCompare(right.name))
+    tags: tags.sort((left, right) => left.name.localeCompare(right.name)),
+    appSettings,
+    localModelEntries: localModelEntries.sort((left, right) => left.label.localeCompare(right.label)),
+    providerProfiles: providerProfiles.sort((left, right) => left.label.localeCompare(right.label)),
+    modelCacheMeta: modelCacheMeta.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
   }
 }
 
@@ -195,6 +291,11 @@ function createDraftSession(overrides: Partial<Session>, state: AppDataState): S
   const workspaceId = overrides.workspaceId ?? state.workspaces[0]?.id ?? seedWorkspaces[0].id
   const defaultProject = state.projects.find((project) => project.workspaceId === workspaceId)
   const timestamp = new Date().toISOString()
+  const targetType = overrides.targetType ?? state.appSettings.activeTargetType
+  const selectedLocalModel = state.localModelEntries.find((entry) => entry.id === state.appSettings.selectedLocalModelId)
+  const selectedProvider = state.providerProfiles.find(
+    (entry) => entry.id === state.appSettings.selectedProviderProfileId
+  )
 
   return {
     id: crypto.randomUUID(),
@@ -204,7 +305,20 @@ function createDraftSession(overrides: Partial<Session>, state: AppDataState): S
     source: overrides.source ?? 'microphone',
     status: overrides.status ?? 'draft',
     runtime: overrides.runtime ?? 'wasm',
-    modelId: overrides.modelId ?? modelOptions[0].id,
+    targetType,
+    targetId:
+      overrides.targetId ??
+      (targetType === 'hosted'
+        ? state.appSettings.selectedProviderProfileId
+        : state.appSettings.selectedLocalModelId),
+    providerProfileId:
+      overrides.providerProfileId ??
+      (targetType === 'hosted' ? state.appSettings.selectedProviderProfileId : undefined),
+    modelId:
+      overrides.modelId ??
+      (targetType === 'hosted'
+        ? state.appSettings.selectedHostedModel || selectedProvider?.model || ''
+        : selectedLocalModel?.repoId ?? defaultLocalModelId),
     participantNames: overrides.participantNames ?? ['Host'],
     audioSources: overrides.audioSources ?? ['Microphone'],
     summary: overrides.summary ?? '',
@@ -224,13 +338,13 @@ function createDraftSession(overrides: Partial<Session>, state: AppDataState): S
 export function AppDataProvider({ children }: PropsWithChildren) {
   const [state, setState] = useState<AppDataState>(createEmptyState)
   const [isReady, setIsReady] = useState(false)
-  const [uiPreferences, setUiPreferences] = useState<UiPreferences>(readUiPreferences)
 
   useEffect(() => {
     let cancelled = false
 
     async function bootstrap() {
       await ensureSeedData()
+      await ensureTranscriptionDefaults()
       const loaded = await loadAllData()
 
       if (!cancelled) {
@@ -248,24 +362,182 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
+  const persistAppSettings = useCallback(async (patch: Partial<AppSettings>) => {
+    let nextSettings = state.appSettings
 
-    window.localStorage.setItem(UI_PREFERENCES_KEY, JSON.stringify(uiPreferences))
-  }, [uiPreferences])
+    setState((current) => {
+      nextSettings = {
+        ...current.appSettings,
+        ...patch,
+        id: APP_SETTINGS_ID,
+        updatedAt: new Date().toISOString()
+      }
 
-  const setSelectedModelId = useCallback((modelId: string) => {
-    setUiPreferences((current) => ({ ...current, selectedModelId: modelId }))
+      return {
+        ...current,
+        appSettings: nextSettings
+      }
+    })
+
+    await storage.appSettings.put(nextSettings)
+  }, [state.appSettings])
+
+  const setSelectedLocalModelId = useCallback((modelId: string) => {
+    void persistAppSettings({
+      selectedLocalModelId: modelId,
+      activeTargetType: 'local'
+    })
+  }, [persistAppSettings])
+
+  const setActiveTargetType = useCallback((targetType: TranscriptionTargetType) => {
+    void persistAppSettings({ activeTargetType: targetType })
+  }, [persistAppSettings])
+
+  const setSelectedProviderProfileId = useCallback((profileId?: string) => {
+    void persistAppSettings({
+      selectedProviderProfileId: profileId,
+      activeTargetType: profileId ? 'hosted' : state.appSettings.activeTargetType
+    })
+  }, [persistAppSettings, state.appSettings.activeTargetType])
+
+  const setSelectedHostedModel = useCallback((model: string) => {
+    void persistAppSettings({ selectedHostedModel: model })
   }, [])
 
   const setMicrophoneEnabled = useCallback((enabled: boolean) => {
-    setUiPreferences((current) => ({ ...current, microphoneEnabled: enabled }))
-  }, [])
+    void persistAppSettings({ microphoneEnabled: enabled })
+  }, [persistAppSettings])
 
   const setSystemAudioEnabled = useCallback((enabled: boolean) => {
-    setUiPreferences((current) => ({ ...current, systemAudioEnabled: enabled }))
+    void persistAppSettings({ systemAudioEnabled: enabled })
+  }, [persistAppSettings])
+
+  const setRemoteModelHostOverride = useCallback((value?: string) => {
+    void persistAppSettings({ remoteModelHostOverride: value?.trim() || undefined })
+  }, [persistAppSettings])
+
+  const saveProviderProfile = useCallback(
+    async (
+      input: Omit<ProviderProfile, 'id' | 'createdAt' | 'updatedAt' | 'lastTestStatus'> &
+        Partial<Pick<ProviderProfile, 'id' | 'lastTestStatus' | 'lastTestedAt' | 'lastError'>>
+    ) => {
+      const timestamp = new Date().toISOString()
+      const profile: ProviderProfile = {
+        id: input.id ?? crypto.randomUUID(),
+        label: input.label,
+        baseUrl: input.baseUrl,
+        model: input.model,
+        apiKey: input.apiKey,
+        organization: input.organization,
+        extraHeaders: input.extraHeaders ?? {},
+        enabled: input.enabled,
+        lastTestStatus: input.lastTestStatus ?? 'idle',
+        lastTestedAt: input.lastTestedAt,
+        lastError: input.lastError,
+        createdAt:
+          state.providerProfiles.find((entry) => entry.id === input.id)?.createdAt ?? timestamp,
+        updatedAt: timestamp
+      }
+
+      await storage.providerProfiles.put(profile)
+      setState((current) => ({
+        ...current,
+        providerProfiles: [...current.providerProfiles.filter((entry) => entry.id !== profile.id), profile].sort(
+          (left, right) => left.label.localeCompare(right.label)
+        )
+      }))
+      return profile
+    },
+    [state.providerProfiles]
+  )
+
+  const removeProviderProfile = useCallback(async (profileId: string) => {
+    await storage.providerProfiles.remove(profileId)
+    const nextSettings =
+      state.appSettings.selectedProviderProfileId === profileId
+        ? {
+            ...state.appSettings,
+            selectedProviderProfileId: undefined,
+            activeTargetType: 'local' as const,
+            updatedAt: new Date().toISOString()
+          }
+        : state.appSettings
+
+    if (nextSettings !== state.appSettings) {
+      await storage.appSettings.put(nextSettings)
+    }
+
+    setState((current) => ({
+      ...current,
+      providerProfiles: current.providerProfiles.filter((entry) => entry.id !== profileId),
+      appSettings: nextSettings
+    }))
+  }, [state.appSettings])
+
+  const saveLocalModelEntry = useCallback(
+    async (
+      input: Pick<LocalModelEntry, 'repoId' | 'label' | 'description' | 'languageLabel'> & Partial<Pick<LocalModelEntry, 'id'>>
+    ) => {
+      const timestamp = new Date().toISOString()
+      const existing = state.localModelEntries.find((entry) => entry.id === input.id)
+      const modelEntry: LocalModelEntry = {
+        id: input.id ?? crypto.randomUUID(),
+        repoId: input.repoId,
+        label: input.label,
+        description: input.description,
+        languageLabel: input.languageLabel,
+        sourceType: 'custom',
+        engine: 'hf-transformers',
+        supportedRuntimeIds: ['webgpu', 'wasm'],
+        isDefault: false,
+        enabled: true,
+        isCurated: false,
+        createdAt: existing?.createdAt ?? timestamp,
+        updatedAt: timestamp
+      }
+
+      await storage.localModelEntries.put(modelEntry)
+      setState((current) => ({
+        ...current,
+        localModelEntries: [...current.localModelEntries.filter((entry) => entry.id !== modelEntry.id), modelEntry].sort(
+          (left, right) => left.label.localeCompare(right.label)
+        )
+      }))
+      return modelEntry
+    },
+    [state.localModelEntries]
+  )
+
+  const removeLocalModelEntry = useCallback(async (modelId: string) => {
+    await storage.localModelEntries.remove(modelId)
+    const nextSettings =
+      state.appSettings.selectedLocalModelId === modelId
+        ? {
+            ...state.appSettings,
+            selectedLocalModelId: defaultLocalModelId,
+            updatedAt: new Date().toISOString()
+          }
+        : state.appSettings
+
+    if (nextSettings !== state.appSettings) {
+      await storage.appSettings.put(nextSettings)
+    }
+
+    setState((current) => ({
+      ...current,
+      localModelEntries: current.localModelEntries.filter((entry) => entry.id !== modelId),
+      appSettings: nextSettings
+    }))
+  }, [state.appSettings])
+
+  const replaceModelCacheMeta = useCallback(async (entry: ModelCacheMeta) => {
+    await storage.modelCacheMeta.put(entry)
+    setState((current) => ({
+      ...current,
+      modelCacheMeta: [...current.modelCacheMeta.filter((item) => item.id !== entry.id), entry].sort((left, right) =>
+        right.updatedAt.localeCompare(left.updatedAt)
+      )
+    }))
   }, [])
 
   const getProjectsForWorkspace = useCallback(
@@ -428,6 +700,39 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     },
     []
   )
+
+  const clearTranscriptItems = useCallback(async (sessionId: string) => {
+    const currentItems = state.transcriptItems.filter((item) => item.sessionId === sessionId)
+
+    await Promise.all(currentItems.map((item) => storage.transcriptItems.remove(item.id)))
+
+    const session = state.sessions.find((item) => item.id === sessionId)
+    const updatedAt = new Date().toISOString()
+
+    setState((current) => ({
+      ...current,
+      transcriptItems: current.transcriptItems.filter((item) => item.sessionId !== sessionId),
+      sessions: current.sessions
+        .map((item) =>
+          item.id === sessionId
+            ? {
+                ...item,
+                transcriptItemIds: [],
+                updatedAt
+              }
+            : item
+        )
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+    }))
+
+    if (session) {
+      await storage.sessions.put({
+        ...session,
+        transcriptItemIds: [],
+        updatedAt
+      })
+    }
+  }, [state.sessions, state.transcriptItems])
 
   const addNote = useCallback(
     async (
@@ -690,6 +995,16 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     [addAttachmentFiles, createSession]
   )
 
+  const uiPreferences: UiPreferences = {
+    activeTargetType: state.appSettings.activeTargetType,
+    selectedLocalModelId: state.appSettings.selectedLocalModelId,
+    selectedProviderProfileId: state.appSettings.selectedProviderProfileId,
+    selectedHostedModel: state.appSettings.selectedHostedModel,
+    microphoneEnabled: state.appSettings.microphoneEnabled,
+    systemAudioEnabled: state.appSettings.systemAudioEnabled,
+    remoteModelHostOverride: state.appSettings.remoteModelHostOverride
+  }
+
   const value = useMemo<AppDataContextValue>(
     () => ({
       isReady,
@@ -697,11 +1012,23 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       projects: state.projects,
       sessions: state.sessions,
       tags: state.tags,
+      appSettings: state.appSettings,
       uiPreferences,
-      modelOptions,
-      setSelectedModelId,
+      localModelEntries: state.localModelEntries,
+      providerProfiles: state.providerProfiles,
+      modelCacheMeta: state.modelCacheMeta,
+      setSelectedLocalModelId,
+      setActiveTargetType,
+      setSelectedProviderProfileId,
+      setSelectedHostedModel,
       setMicrophoneEnabled,
       setSystemAudioEnabled,
+      setRemoteModelHostOverride,
+      saveProviderProfile,
+      removeProviderProfile,
+      saveLocalModelEntry,
+      removeLocalModelEntry,
+      replaceModelCacheMeta,
       getSessionDetail,
       getProjectsForWorkspace,
       getSessionsForProject,
@@ -709,6 +1036,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       createSessionFromUpload,
       updateSession,
       addTranscriptItem,
+      clearTranscriptItems,
       updateTranscriptItem,
       addNote,
       updateNote,
@@ -723,15 +1051,30 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       addNote,
       addOutput,
       addTranscriptItem,
+      clearTranscriptItems,
       createSession,
       createSessionFromUpload,
       getProjectsForWorkspace,
       getSessionDetail,
       getSessionsForProject,
       isReady,
+      removeLocalModelEntry,
+      removeProviderProfile,
+      replaceModelCacheMeta,
+      saveLocalModelEntry,
+      saveProviderProfile,
+      setActiveTargetType,
       setMicrophoneEnabled,
-      setSelectedModelId,
+      setRemoteModelHostOverride,
+      setSelectedHostedModel,
+      setSelectedLocalModelId,
+      setSelectedProviderProfileId,
       setSystemAudioEnabled,
+      state.appSettings,
+      state.localModelEntries,
+      state.modelCacheMeta,
+      state.projects,
+      state.providerProfiles,
       state.projects,
       state.sessions,
       state.tags,

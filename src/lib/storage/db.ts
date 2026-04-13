@@ -9,9 +9,10 @@ import type {
   TranscriptItem,
   Workspace
 } from '@/types/domain'
+import type { AppSettings, LocalModelEntry, ModelCacheMeta, ProviderProfile } from '@/types/settings'
 
 const DATABASE_NAME = 'quiet-scribe'
-const DATABASE_VERSION = 1
+const DATABASE_VERSION = 2
 
 export interface QuietScribeDatabaseSchema extends DBSchema {
   workspaces: {
@@ -76,6 +77,35 @@ export interface QuietScribeDatabaseSchema extends DBSchema {
       'by-name': TagTemplate['name']
     }
   }
+  appSettings: {
+    key: AppSettings['id']
+    value: AppSettings
+    indexes: {
+      'by-updatedAt': AppSettings['updatedAt']
+    }
+  }
+  providerProfiles: {
+    key: ProviderProfile['id']
+    value: ProviderProfile
+    indexes: {
+      'by-updatedAt': ProviderProfile['updatedAt']
+    }
+  }
+  localModelEntries: {
+    key: LocalModelEntry['id']
+    value: LocalModelEntry
+    indexes: {
+      'by-repoId': LocalModelEntry['repoId']
+    }
+  }
+  modelCacheMeta: {
+    key: ModelCacheMeta['id']
+    value: ModelCacheMeta
+    indexes: {
+      'by-modelEntryId': ModelCacheMeta['modelEntryId']
+      'by-updatedAt': ModelCacheMeta['updatedAt']
+    }
+  }
 }
 
 let databasePromise: Promise<IDBPDatabase<QuietScribeDatabaseSchema>> | undefined
@@ -127,6 +157,27 @@ export function getDatabase() {
         const store = database.createObjectStore('tagTemplates', { keyPath: 'id' })
         store.createIndex('by-workspaceId', 'workspaceId')
         store.createIndex('by-name', 'name')
+      }
+
+      if (!database.objectStoreNames.contains('appSettings')) {
+        const store = database.createObjectStore('appSettings', { keyPath: 'id' })
+        store.createIndex('by-updatedAt', 'updatedAt')
+      }
+
+      if (!database.objectStoreNames.contains('providerProfiles')) {
+        const store = database.createObjectStore('providerProfiles', { keyPath: 'id' })
+        store.createIndex('by-updatedAt', 'updatedAt')
+      }
+
+      if (!database.objectStoreNames.contains('localModelEntries')) {
+        const store = database.createObjectStore('localModelEntries', { keyPath: 'id' })
+        store.createIndex('by-repoId', 'repoId', { unique: true })
+      }
+
+      if (!database.objectStoreNames.contains('modelCacheMeta')) {
+        const store = database.createObjectStore('modelCacheMeta', { keyPath: 'id' })
+        store.createIndex('by-modelEntryId', 'modelEntryId')
+        store.createIndex('by-updatedAt', 'updatedAt')
       }
     }
   })
