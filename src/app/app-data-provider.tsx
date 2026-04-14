@@ -31,6 +31,7 @@ import type {
 } from '@/types/domain'
 import type {
   AppSettings,
+  AsrMode,
   LocalModelEntry,
   ModelCacheMeta,
   ProviderProfile,
@@ -42,7 +43,14 @@ const APP_SETTINGS_ID = 'app-settings'
 
 type UiPreferences = Pick<
   AppSettings,
-  'activeTargetType' | 'selectedLocalModelId' | 'selectedProviderProfileId' | 'selectedHostedModel' | 'microphoneEnabled' | 'systemAudioEnabled' | 'remoteModelHostOverride'
+  | 'activeTargetType'
+  | 'asrMode'
+  | 'selectedLocalModelId'
+  | 'selectedProviderProfileId'
+  | 'selectedHostedModel'
+  | 'microphoneEnabled'
+  | 'systemAudioEnabled'
+  | 'remoteModelHostOverride'
 >
 
 export interface SessionDetail {
@@ -69,6 +77,7 @@ interface AppDataContextValue {
   modelCacheMeta: ModelCacheMeta[]
   setSelectedLocalModelId: (modelId: string) => void
   setActiveTargetType: (targetType: TranscriptionTargetType) => void
+  setAsrMode: (mode: AsrMode) => void
   setSelectedProviderProfileId: (profileId?: string) => void
   setSelectedHostedModel: (model: string) => void
   setMicrophoneEnabled: (enabled: boolean) => void
@@ -140,6 +149,7 @@ interface AppDataState {
 const defaultAppSettings: AppSettings = {
   id: APP_SETTINGS_ID,
   activeTargetType: 'local',
+  asrMode: 'batch',
   selectedLocalModelId: defaultLocalModelId,
   selectedHostedModel: '',
   microphoneEnabled: true,
@@ -163,12 +173,14 @@ function readLegacyUiPreferences(): Partial<UiPreferences> {
 
   try {
     const legacy = JSON.parse(stored) as {
+      asrMode?: AsrMode
       selectedModelId?: string
       microphoneEnabled?: boolean
       systemAudioEnabled?: boolean
     }
 
     return {
+      asrMode: legacy.asrMode ?? 'batch',
       selectedLocalModelId: legacy.selectedModelId ?? defaultLocalModelId,
       microphoneEnabled: legacy.microphoneEnabled ?? true,
       systemAudioEnabled: legacy.systemAudioEnabled ?? false
@@ -215,14 +227,7 @@ async function ensureSeedData() {
 }
 
 async function ensureTranscriptionDefaults() {
-  const existingModels = await storage.localModelEntries.list()
-  const existingModelIds = new Set(existingModels.map((entry) => entry.id))
-
-  await Promise.all(
-    curatedLocalModels
-      .filter((entry) => !existingModelIds.has(entry.id))
-      .map((entry) => storage.localModelEntries.put(entry))
-  )
+  await Promise.all(curatedLocalModels.map((entry) => storage.localModelEntries.put(entry)))
 
   const settings = await storage.appSettings.get(APP_SETTINGS_ID)
 
@@ -269,7 +274,10 @@ async function loadAllData(): Promise<AppDataState> {
       storage.modelCacheMeta.list()
     ])
 
-  const appSettings = appSettingsList[0] ?? defaultAppSettings
+  const appSettings = {
+    ...defaultAppSettings,
+    ...(appSettingsList[0] ?? {})
+  }
 
   return {
     workspaces: workspaces.sort((left, right) => left.name.localeCompare(right.name)),
@@ -305,6 +313,7 @@ function createDraftSession(overrides: Partial<Session>, state: AppDataState): S
     source: overrides.source ?? 'microphone',
     status: overrides.status ?? 'draft',
     runtime: overrides.runtime ?? 'wasm',
+    asrMode: overrides.asrMode ?? state.appSettings.asrMode,
     targetType,
     targetId:
       overrides.targetId ??
@@ -391,6 +400,10 @@ export function AppDataProvider({ children }: PropsWithChildren) {
 
   const setActiveTargetType = useCallback((targetType: TranscriptionTargetType) => {
     void persistAppSettings({ activeTargetType: targetType })
+  }, [persistAppSettings])
+
+  const setAsrMode = useCallback((mode: AsrMode) => {
+    void persistAppSettings({ asrMode: mode })
   }, [persistAppSettings])
 
   const setSelectedProviderProfileId = useCallback((profileId?: string) => {
@@ -489,6 +502,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         sourceType: 'custom',
         engine: 'hf-transformers',
         supportedRuntimeIds: ['webgpu', 'wasm'],
+        supportsRealtime: true,
         isDefault: false,
         enabled: true,
         isCurated: false,
@@ -997,6 +1011,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
 
   const uiPreferences: UiPreferences = {
     activeTargetType: state.appSettings.activeTargetType,
+    asrMode: state.appSettings.asrMode,
     selectedLocalModelId: state.appSettings.selectedLocalModelId,
     selectedProviderProfileId: state.appSettings.selectedProviderProfileId,
     selectedHostedModel: state.appSettings.selectedHostedModel,
@@ -1019,6 +1034,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       modelCacheMeta: state.modelCacheMeta,
       setSelectedLocalModelId,
       setActiveTargetType,
+      setAsrMode,
       setSelectedProviderProfileId,
       setSelectedHostedModel,
       setMicrophoneEnabled,
@@ -1064,6 +1080,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       saveLocalModelEntry,
       saveProviderProfile,
       setActiveTargetType,
+      setAsrMode,
       setMicrophoneEnabled,
       setRemoteModelHostOverride,
       setSelectedHostedModel,

@@ -20,6 +20,7 @@ export type TranscriptionWorkerMessage =
       modelEntry: LocalModelEntry
       sampleRate: number
       audio: Float32Array
+      requestKind?: 'full' | 'realtime-chunk'
       remoteHostOverride?: string
     }
   | {
@@ -39,10 +40,15 @@ export type TranscriptionWorkerEvent =
       type: 'status'
       state: 'downloading' | 'warming' | 'ready' | 'recording' | 'transcribing' | 'stopped'
       detail: string
+      progress?: number
+      fileName?: string
+      loadedBytes?: number
+      totalBytes?: number
     }
   | {
       type: 'complete'
       sessionId: string
+      requestKind?: 'full' | 'realtime-chunk'
       result: TranscriptionResult
       detail: string
     }
@@ -50,6 +56,8 @@ export type TranscriptionWorkerEvent =
       type: 'error'
       message: string
     }
+
+export type TranscriptionWorkerStatusEvent = Extract<TranscriptionWorkerEvent, { type: 'status' }>
 
 type AsrPipeline = Awaited<ReturnType<typeof pipeline>>
 type WorkerStatusState = 'downloading' | 'warming' | 'ready' | 'recording' | 'transcribing' | 'stopped'
@@ -64,11 +72,16 @@ let activePipeline:
     }
   | undefined
 
-function postStatus(state: WorkerStatusState, detail: string) {
+function postStatus(
+  state: WorkerStatusState,
+  detail: string,
+  extra: Omit<TranscriptionWorkerStatusEvent, 'type' | 'state' | 'detail'> = {}
+) {
   workerContext.postMessage({
     type: 'status',
     state,
-    detail
+    detail,
+    ...extra
   } satisfies TranscriptionWorkerEvent)
 }
 
@@ -99,6 +112,16 @@ function toProgressDetail(info: ProgressInfo) {
   }
 
   return `${info.status} ${fileName}`.trim()
+}
+
+function toProgressSnapshot(info: ProgressInfo) {
+  return {
+    fileName: 'file' in info ? info.file : undefined,
+    loadedBytes: 'loaded' in info ? info.loaded : undefined,
+    totalBytes: 'total' in info ? info.total : undefined,
+    progress:
+      info.status === 'done' ? 100 : typeof info.progress === 'number' ? info.progress : undefined
+  }
 }
 
 async function disposePipeline() {
@@ -142,8 +165,13 @@ async function getTransformersPipeline(
     device: runtime === 'webgpu' ? 'webgpu' : undefined,
     dtype: runtime === 'webgpu' ? 'fp32' : 'q8',
     progress_callback: (info: ProgressInfo) => {
-      if (info.status === 'download' || info.status === 'progress' || info.status === 'done') {
-        postStatus('downloading', toProgressDetail(info))
+      if (
+        info.status === 'initiate' ||
+        info.status === 'download' ||
+        info.status === 'progress' ||
+        info.status === 'done'
+      ) {
+        postStatus('downloading', toProgressDetail(info), toProgressSnapshot(info))
         return
       }
 
@@ -167,14 +195,16 @@ async function transcribeLocalAudio(
   modelEntry: LocalModelEntry,
   runtime: RuntimeId,
   audio: Float32Array,
+  requestKind: 'full' | 'realtime-chunk' = 'full',
   remoteHostOverride?: string
 ) {
   const transcriber = (await getTransformersPipeline(modelEntry, runtime, remoteHostOverride)) as any
   postStatus('transcribing', `Transcribing with ${modelEntry.label}…`)
+  const isRealtimeChunk = requestKind === 'realtime-chunk'
 
   const output = await transcriber(audio, {
-    chunk_length_s: 30,
-    stride_length_s: 5,
+    chunk_length_s: isRealtimeChunk ? 8 : 30,
+    stride_length_s: isRealtimeChunk ? 1 : 5,
     return_timestamps: false
   })
 
@@ -186,6 +216,7 @@ async function transcribeLocalAudio(
   workerContext.postMessage({
     type: 'complete',
     sessionId,
+    requestKind,
     result,
     detail: 'Saved locally.'
   } satisfies TranscriptionWorkerEvent)
@@ -242,6 +273,7 @@ workerContext.onmessage = async (event: MessageEvent<TranscriptionWorkerMessage>
         message.modelEntry,
         message.runtime,
         message.audio,
+        message.requestKind,
         message.remoteHostOverride
       )
       return

@@ -1,6 +1,7 @@
 import { Database, Mic, Radio, Server, WandSparkles } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { PageShell } from '@/components/page-shell'
+import { TranscriptionProgress } from '@/components/transcription/transcription-progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,47 +9,38 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAppData } from '@/hooks/use-app-data'
 import { useRuntimeStatus } from '@/hooks/use-runtime-status'
+import { normalizeAudioBlob } from '@/lib/audio/normalize'
 import {
   clearTransformersJsCache,
   inspectTransformersJsCache,
   resolveLocalModelRuntime,
   validateCustomLocalModelRepoId
 } from '@/lib/transcription/local-models'
+import {
+  prepareLocalModelWorker,
+  transcribeLocalAudioWithWorker
+} from '@/lib/transcription/worker-client'
 import { maskApiKey } from '@/lib/transcription/hosted-provider'
 import type { LocalModelEntry } from '@/types/settings'
-import type { RuntimeId } from '@/types/transcription'
 
-async function prepareLocalModel(
-  model: LocalModelEntry,
-  runtime: RuntimeId,
-  remoteHostOverride?: string
-) {
-  const worker = new Worker(new URL('../workers/transcription.worker.ts', import.meta.url), {
-    type: 'module'
-  })
+interface ModelPrepareState {
+  detail: string
+  modelId: string
+  phase: 'error' | 'running' | 'success'
+  progress?: number
+}
 
-  return new Promise<void>((resolve, reject) => {
-    worker.onmessage = (event) => {
-      const message = event.data as { type: string; message?: string; state?: string }
+interface LocalModelTestState {
+  detail: string
+  phase: 'error' | 'idle' | 'running' | 'success'
+  progress?: number
+  transcript: string
+}
 
-      if (message.type === 'status' && message.state === 'ready') {
-        worker.terminate()
-        resolve()
-      }
-
-      if (message.type === 'error') {
-        worker.terminate()
-        reject(new Error(message.message ?? 'Unable to prepare local model.'))
-      }
-    }
-
-    worker.postMessage({
-      type: 'prepare-local-model',
-      modelEntry: model,
-      runtime,
-      remoteHostOverride
-    })
-  })
+const DEFAULT_TEST_STATE: LocalModelTestState = {
+  detail: 'Choose a short local audio file to confirm model loading and browser transcription.',
+  phase: 'idle',
+  transcript: ''
 }
 
 export function SettingsPage() {
@@ -65,6 +57,7 @@ export function SettingsPage() {
     saveProviderProfile,
     sessions,
     setActiveTargetType,
+    setAsrMode,
     setMicrophoneEnabled,
     setRemoteModelHostOverride,
     setSelectedHostedModel,
@@ -74,7 +67,11 @@ export function SettingsPage() {
     workspaces
   } = useAppData()
 
+  const testAudioInputRef = useRef<HTMLInputElement | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [prepareState, setPrepareState] = useState<ModelPrepareState | null>(null)
+  const [testAudioFile, setTestAudioFile] = useState<File | null>(null)
+  const [testState, setTestState] = useState<LocalModelTestState>(DEFAULT_TEST_STATE)
   const [customModelRepoId, setCustomModelRepoId] = useState('')
   const [customModelLabel, setCustomModelLabel] = useState('')
   const [customModelDescription, setCustomModelDescription] = useState('')
@@ -88,11 +85,20 @@ export function SettingsPage() {
   const [providerHeaders, setProviderHeaders] = useState('')
 
   const runtimeIds = runtimeSnapshot?.availableRuntimeIds ?? []
+  const selectedLocalModel =
+    localModelEntries.find((entry) => entry.id === appSettings.selectedLocalModelId) ?? localModelEntries[0]
+  const selectedLocalRuntime = selectedLocalModel
+    ? resolveLocalModelRuntime(selectedLocalModel, runtimeIds)
+    : null
 
   const cacheMetaByModelId = useMemo(
     () => Object.fromEntries(modelCacheMeta.map((entry) => [entry.modelEntryId, entry])),
     [modelCacheMeta]
   )
+  const selectedLocalCacheMeta = selectedLocalModel ? cacheMetaByModelId[selectedLocalModel.id] : undefined
+  const selectedModelReadyForLiveAsr = Boolean(selectedLocalCacheMeta?.allCached)
+  const canPreloadSelectedModel =
+    Boolean(selectedLocalModel && selectedLocalRuntime && selectedLocalModel.engine === 'hf-transformers')
 
   function resetProviderForm() {
     setEditingProviderId(null)
@@ -201,9 +207,45 @@ export function SettingsPage() {
       return
     }
 
-    await prepareLocalModel(model, runtime, appSettings.remoteModelHostOverride)
-    await refreshCache(model)
-    setFeedback(`${model.label} is prepared for ${runtime.toUpperCase()}.`)
+    setPrepareState({
+      detail: `Preparing ${model.label}…`,
+      modelId: model.id,
+      phase: 'running'
+    })
+
+    try {
+      await prepareLocalModelWorker({
+        modelEntry: model,
+        runtime,
+        remoteHostOverride: appSettings.remoteModelHostOverride,
+        onStatus: (status) => {
+          setPrepareState({
+            detail: status.detail,
+            modelId: model.id,
+            phase: 'running',
+            progress: status.progress
+          })
+        }
+      })
+
+      await refreshCache(model)
+      const successDetail = `${model.label} is prepared for ${runtime.toUpperCase()}.`
+      setPrepareState({
+        detail: successDetail,
+        modelId: model.id,
+        phase: 'success',
+        progress: 100
+      })
+      setFeedback(successDetail)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unable to prepare ${model.label}.`
+      setPrepareState({
+        detail: message,
+        modelId: model.id,
+        phase: 'error'
+      })
+      setFeedback(message)
+    }
   }
 
   async function handleClearCache(model: LocalModelEntry) {
@@ -217,6 +259,90 @@ export function SettingsPage() {
     await clearTransformersJsCache(model, runtime, appSettings.remoteModelHostOverride)
     await refreshCache(model)
     setFeedback(`Cleared cached files for ${model.label}.`)
+  }
+
+  function handleTestAudioSelection(fileList: FileList | null) {
+    const file = fileList?.[0] ?? null
+    setTestAudioFile(file)
+    setTestState((current) => ({
+      ...current,
+      detail: file
+        ? `Ready to test ${file.name} with ${selectedLocalModel?.label ?? 'the selected model'}.`
+        : DEFAULT_TEST_STATE.detail,
+      phase: 'idle'
+    }))
+  }
+
+  async function handleRunQuickTest() {
+    if (!selectedLocalModel) {
+      setFeedback('Choose a local model before running a quick test.')
+      return
+    }
+
+    if (!selectedLocalRuntime) {
+      setFeedback(`No compatible runtime is available for ${selectedLocalModel.label}.`)
+      return
+    }
+
+    if (selectedLocalModel.engine !== 'hf-transformers') {
+      setFeedback('Quick tests currently support the Transformers.js local models only.')
+      return
+    }
+
+    if (!testAudioFile) {
+      setFeedback('Choose a local audio file before running the quick test.')
+      return
+    }
+
+    setTestState({
+      detail: 'Normalizing audio for browser transcription…',
+      phase: 'running',
+      transcript: ''
+    })
+
+    try {
+      const normalized = await normalizeAudioBlob(testAudioFile)
+      const result = await transcribeLocalAudioWithWorker({
+        sessionId: `settings-test-${Date.now()}`,
+        modelEntry: selectedLocalModel,
+        runtime: selectedLocalRuntime,
+        sampleRate: normalized.sampleRate,
+        audio: normalized.channelData,
+        remoteHostOverride: appSettings.remoteModelHostOverride,
+        onStatus: (status) => {
+          setTestState((current) => ({
+            ...current,
+            detail: status.detail,
+            phase: 'running',
+            progress: status.progress
+          }))
+        }
+      })
+
+      const transcript = result.segments.length > 0
+        ? result.segments.map((segment) => segment.text.trim()).filter(Boolean).join('\n')
+        : result.text.trim()
+
+      const successDetail = transcript
+        ? 'Quick test completed locally.'
+        : 'Quick test completed, but no speech was detected.'
+
+      setTestState({
+        detail: successDetail,
+        phase: 'success',
+        progress: 100,
+        transcript
+      })
+      setFeedback(successDetail)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Quick test failed.'
+      setTestState({
+        detail: message,
+        phase: 'error',
+        transcript: ''
+      })
+      setFeedback(message)
+    }
   }
 
   return (
@@ -242,6 +368,8 @@ export function SettingsPage() {
           <CardContent className="grid gap-4">
             {localModelEntries.map((model) => {
               const cacheMeta = cacheMetaByModelId[model.id]
+              const modelPrepareState = prepareState?.modelId === model.id ? prepareState : null
+              const isPreparingModel = modelPrepareState?.phase === 'running'
 
               return (
                 <div key={model.id} className="rounded-[1.5rem] bg-surface-subtle p-4">
@@ -251,9 +379,13 @@ export function SettingsPage() {
                         <p className="text-sm font-semibold text-foreground">{model.label}</p>
                         <Badge variant="secondary">{model.engine}</Badge>
                         <Badge variant="outline">{model.languageLabel}</Badge>
+                        {model.supportsRealtime ? <Badge variant="secondary">Live ASR</Badge> : null}
                         <Badge variant="outline">
                           {model.supportedRuntimeIds.map((runtime) => runtime.toUpperCase()).join(' / ')}
                         </Badge>
+                        {appSettings.selectedLocalModelId === model.id ? (
+                          <Badge variant="secondary">Selected</Badge>
+                        ) : null}
                       </div>
                       <p className="text-sm leading-6 text-muted-foreground">{model.description}</p>
                       <p className="text-xs text-muted-foreground">
@@ -267,8 +399,13 @@ export function SettingsPage() {
                       <Button type="button" variant="secondary" onClick={() => setSelectedLocalModelId(model.id)}>
                         Use
                       </Button>
-                      <Button type="button" variant="secondary" onClick={() => void handlePrepareModel(model)}>
-                        Prepare
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => void handlePrepareModel(model)}
+                        disabled={prepareState?.phase === 'running'}
+                      >
+                        {isPreparingModel ? 'Preloading…' : 'Preload'}
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => void refreshCache(model)}>
                         Refresh cache
@@ -283,9 +420,87 @@ export function SettingsPage() {
                       ) : null}
                     </div>
                   </div>
+
+                  {modelPrepareState ? (
+                    <div className="mt-4">
+                      <TranscriptionProgress
+                        label={modelPrepareState.phase === 'error' ? 'Prepare failed' : 'Model download'}
+                        detail={modelPrepareState.detail}
+                        progress={modelPrepareState.progress}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               )
             })}
+
+            <div className="grid gap-3 rounded-[1.5rem] bg-[#eef4ff] p-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Quick local model test</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Run the selected browser-local model against a short audio file without leaving Settings.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">{selectedLocalModel?.label ?? 'No local model selected'}</Badge>
+                {selectedLocalModel ? <Badge variant="outline">{selectedLocalModel.engine}</Badge> : null}
+                <Badge variant="outline">{selectedLocalRuntime?.toUpperCase() ?? 'Unavailable runtime'}</Badge>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="secondary" onClick={() => testAudioInputRef.current?.click()}>
+                  Choose audio
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => void handleRunQuickTest()}
+                  disabled={!testAudioFile || testState.phase === 'running'}
+                >
+                  {testState.phase === 'running' ? 'Testing…' : 'Run quick test'}
+                </Button>
+              </div>
+
+              <input
+                ref={testAudioInputRef}
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={(event) => handleTestAudioSelection(event.target.files)}
+              />
+
+              <p className="text-xs text-muted-foreground">
+                {testAudioFile
+                  ? `${testAudioFile.name} · ${Math.max(1, Math.round(testAudioFile.size / 1024))} KB`
+                  : 'No audio file selected yet. Audio stays in the browser and is not uploaded.'}
+              </p>
+
+              {selectedLocalModel?.engine === 'webnn-ort' ? (
+                <p className="text-xs text-muted-foreground">
+                  The WebNN placeholder model is not wired for local quick tests in this build. Switch to
+                  Whisper Tiny English or Whisper Base to verify end-to-end browser transcription.
+                </p>
+              ) : null}
+
+              {testState.phase !== 'idle' ? (
+                <TranscriptionProgress
+                  label={testState.phase === 'error' ? 'Quick test failed' : 'Quick test'}
+                  detail={testState.detail}
+                  progress={testState.progress}
+                />
+              ) : (
+                <div className="rounded-[1.25rem] bg-white px-4 py-3 text-sm text-muted-foreground">
+                  {testState.detail}
+                </div>
+              )}
+
+              <Textarea
+                value={testState.transcript}
+                readOnly
+                placeholder="Transcript preview will appear here after a successful quick test."
+                className="min-h-28 bg-white"
+              />
+            </div>
 
             <div className="grid gap-3 rounded-[1.5rem] bg-[#f7f9fc] p-4">
               <p className="text-sm font-semibold text-foreground">Add custom local model</p>
@@ -435,6 +650,82 @@ export function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-3 rounded-[1.5rem] bg-white p-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>ASR mode</span>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={appSettings.asrMode === 'batch' ? 'default' : 'secondary'}
+                    onClick={() => setAsrMode('batch')}
+                  >
+                    Batch
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={appSettings.asrMode === 'realtime' ? 'default' : 'secondary'}
+                    onClick={() => setAsrMode('realtime')}
+                  >
+                    Realtime ASR
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Realtime ASR uses browser-local chunked transcription during recording. Hosted providers
+                and upload sessions still run as batch jobs after capture completes.
+              </p>
+              <div className="grid gap-3 rounded-[1.25rem] bg-[#f7f9fc] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">Selected live model</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{selectedLocalModel?.label ?? 'No local model selected'}</Badge>
+                      <Badge variant="outline">{selectedLocalRuntime?.toUpperCase() ?? 'Unavailable runtime'}</Badge>
+                      <Badge variant={selectedModelReadyForLiveAsr ? 'secondary' : 'outline'}>
+                        {selectedModelReadyForLiveAsr ? 'Preloaded' : 'Cold start'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => selectedLocalModel && void handlePrepareModel(selectedLocalModel)}
+                      disabled={!canPreloadSelectedModel || prepareState?.phase === 'running'}
+                    >
+                      {prepareState?.phase === 'running' && prepareState?.modelId === selectedLocalModel?.id
+                        ? 'Preloading…'
+                        : 'Preload selected model'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => selectedLocalModel && void refreshCache(selectedLocalModel)}
+                      disabled={!selectedLocalModel}
+                    >
+                      Refresh status
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Preload downloads and caches the selected browser model now so live ASR starts from a warm cache
+                  instead of waiting for the first recording chunk to trigger model setup.
+                </p>
+                {!selectedLocalModel?.supportsRealtime && appSettings.asrMode === 'realtime' ? (
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    The selected local model does not support live ASR. Switch to a model with the Live ASR badge.
+                  </p>
+                ) : null}
+                {selectedLocalCacheMeta ? (
+                  <p className="text-xs leading-5 text-muted-foreground">{selectedLocalCacheMeta.detail}</p>
+                ) : null}
+                {prepareState?.modelId === selectedLocalModel?.id ? (
+                  <TranscriptionProgress
+                    label={prepareState.phase === 'error' ? 'Preload failed' : 'Model preload'}
+                    detail={prepareState.detail}
+                    progress={prepareState.progress}
+                  />
+                ) : null}
+              </div>
               <div className="flex items-center justify-between">
                 <span>Preferred runtime</span>
                 <span className="font-semibold text-foreground">

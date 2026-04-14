@@ -15,7 +15,9 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { Attachment, Note, SessionTask, TranscriptItem } from '@/types/domain'
+import { AudioLevelMeter } from '@/components/session/audio-level-meter'
 import { SessionTimelineItem } from '@/components/session/session-timeline-item'
+import { TranscriptionProgress } from '@/components/transcription/transcription-progress'
 import { ExportModal } from '@/components/session/export-modal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -88,6 +90,7 @@ export function SessionPage() {
     getProjectsForWorkspace,
     getSessionDetail,
     localModelEntries,
+    modelCacheMeta,
     providerProfiles,
     sessions,
     updateNote,
@@ -177,6 +180,8 @@ export function SessionPage() {
   const projects = getProjectsForWorkspace(session.workspaceId)
   const selectedLocalModel = localModelEntries.find((entry) => entry.id === session.targetId)
   const selectedProvider = providerProfiles.find((entry) => entry.id === session.providerProfileId)
+  const selectedLocalCacheMeta = modelCacheMeta.find((entry) => entry.modelEntryId === selectedLocalModel?.id)
+  const sessionAsrMode = session.asrMode ?? appSettings.asrMode
   const fullTranscript = transcriptItems
     .map((item) => `${item.speakerLabel ?? 'Speaker'} · ${formatTime(item.occurredAt)}\n${item.text}`)
     .join('\n\n')
@@ -289,6 +294,7 @@ export function SessionPage() {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{runtimeLabels[transcription.runtimeId]}</Badge>
+                  <Badge variant="outline">{sessionAsrMode === 'realtime' ? 'Live ASR' : 'Batch ASR'}</Badge>
                   <Badge variant="outline">
                     {session.targetType === 'hosted'
                       ? selectedProvider?.label ?? 'Hosted provider'
@@ -300,6 +306,44 @@ export function SessionPage() {
                   <Badge variant="outline">{transcription.segmentsProcessed} segments</Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">{transcription.detail}</p>
+                {sessionAsrMode === 'realtime' &&
+                session.targetType === 'local' &&
+                selectedLocalModel &&
+                !selectedLocalCacheMeta?.allCached ? (
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    {selectedLocalModel.label} is not preloaded yet. Use Settings to preload it and reduce the first live chunk delay.
+                  </p>
+                ) : null}
+
+                {transcription.phase === 'transcribing' ||
+                transcription.downloadProgress !== undefined ||
+                session.source !== 'upload' ? (
+                  <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                    {transcription.phase === 'transcribing' || transcription.downloadProgress !== undefined ? (
+                      <TranscriptionProgress
+                        label={
+                          transcription.downloadProgress !== undefined
+                            ? 'Downloading model'
+                            : sessionAsrMode === 'realtime'
+                              ? 'Running live ASR'
+                              : 'Running transcription'
+                        }
+                        detail={transcription.detail}
+                        progress={transcription.downloadProgress}
+                      />
+                    ) : null}
+
+                    {session.source !== 'upload' ? (
+                      <AudioLevelMeter
+                        active={transcription.phase === 'recording'}
+                        levels={transcription.audioLevels}
+                        sourceLabel={
+                          session.source === 'system-audio' ? 'System audio capture' : 'Microphone capture'
+                        }
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -444,10 +488,14 @@ export function SessionPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                       Full transcript
                     </p>
-                    {transcription.phase === 'transcribing' ? (
+                    {transcription.phase === 'transcribing' || transcription.downloadProgress !== undefined ? (
                       <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                         <LoaderCircle className="size-4 animate-spin" />
-                        Warming runtime
+                        {transcription.downloadProgress !== undefined
+                          ? `Downloading model (${Math.round(transcription.downloadProgress)}%)`
+                          : sessionAsrMode === 'realtime'
+                            ? 'Updating live transcript'
+                            : 'Processing audio'}
                       </span>
                     ) : null}
                   </div>

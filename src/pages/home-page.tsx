@@ -40,6 +40,7 @@ export function HomePage() {
         title: 'New recording',
         source: uiPreferences.systemAudioEnabled ? 'system-audio' : 'microphone',
         audioSources: uiPreferences.systemAudioEnabled ? ['System audio'] : ['Microphone'],
+        asrMode: appSettings.asrMode,
         targetType: appSettings.activeTargetType,
         targetId:
           appSettings.activeTargetType === 'hosted'
@@ -108,6 +109,11 @@ export function HomePage() {
             <div className="rounded-[1.5rem] bg-surface-subtle p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                 Transcription target
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {appSettings.asrMode === 'realtime'
+                  ? 'New local recordings will use live chunked ASR when the selected model supports it.'
+                  : 'New recordings will transcribe after capture completes.'}
               </p>
               <select
                 value={appSettings.activeTargetType}

@@ -4,6 +4,7 @@ export type EntityId = string
 export type ISODateString = string
 
 export type TranscriptionTargetType = 'local' | 'hosted'
+export type AsrMode = 'batch' | 'realtime'
 export type LocalModelSourceType = 'built-in' | 'custom'
 export type LocalModelEngine = 'webnn-ort' | 'hf-transformers'
 export type ProviderTestStatus = 'idle' | 'success' | 'error'
@@ -16,6 +17,7 @@ interface BaseEntity {
 
 export interface AppSettings extends BaseEntity {
   activeTargetType: TranscriptionTargetType
+  asrMode: AsrMode
   selectedLocalModelId: string
   selectedProviderProfileId?: string
   selectedHostedModel?: string
@@ -31,6 +33,7 @@ export interface LocalModelEntry extends BaseEntity {
   sourceType: LocalModelSourceType
   engine: LocalModelEngine
   supportedRuntimeIds: RuntimeId[]
+  supportsRealtime: boolean
   languageLabel: string
   isDefault: boolean
   enabled: boolean
