@@ -105,12 +105,20 @@ interface AppDataContextValue {
       Partial<
         Pick<
           TranscriptItem,
-          'speakerLabel' | 'occurredAt' | 'tagIds' | 'startedAtMs' | 'endedAtMs' | 'confidence'
+          | 'id'
+          | 'speakerLabel'
+          | 'occurredAt'
+          | 'tagIds'
+          | 'startedAtMs'
+          | 'endedAtMs'
+          | 'confidence'
+          | 'model'
+          | 'isFinal'
         >
       >
   ) => Promise<TranscriptItem>
-  clearTranscriptItems: (sessionId: string) => Promise<void>
   updateTranscriptItem: (itemId: string, patch: Partial<TranscriptItem>) => Promise<void>
+  deleteTranscriptItem: (itemId: string) => Promise<void>
   addNote: (
     sessionId: string,
     input?: Partial<
@@ -149,7 +157,7 @@ interface AppDataState {
 const defaultAppSettings: AppSettings = {
   id: APP_SETTINGS_ID,
   activeTargetType: 'local',
-  asrMode: 'batch',
+  asrMode: 'realtime',
   selectedLocalModelId: defaultLocalModelId,
   selectedHostedModel: '',
   microphoneEnabled: true,
@@ -180,7 +188,7 @@ function readLegacyUiPreferences(): Partial<UiPreferences> {
     }
 
     return {
-      asrMode: legacy.asrMode ?? 'batch',
+      asrMode: legacy.asrMode ?? 'realtime',
       selectedLocalModelId: legacy.selectedModelId ?? defaultLocalModelId,
       microphoneEnabled: legacy.microphoneEnabled ?? true,
       systemAudioEnabled: legacy.systemAudioEnabled ?? false
@@ -282,8 +290,12 @@ async function loadAllData(): Promise<AppDataState> {
   return {
     workspaces: workspaces.sort((left, right) => left.name.localeCompare(right.name)),
     projects: projects.sort((left, right) => left.name.localeCompare(right.name)),
-    sessions: sessions.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
-    transcriptItems: transcriptItems.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
+    sessions: sessions
+      .filter((session) => !session.deletedAt)
+      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
+    transcriptItems: transcriptItems
+      .filter((item) => !item.deletedAt)
+      .sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
     notes: notes.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
     attachments: attachments.sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
     outputs: outputs.sort((left, right) => right.generatedAt.localeCompare(left.generatedAt)),
@@ -576,7 +588,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         session,
         workspace: state.workspaces.find((item) => item.id === session.workspaceId),
         project: state.projects.find((item) => item.id === session.projectId),
-        transcriptItems: state.transcriptItems.filter((item) => item.sessionId === sessionId),
+        transcriptItems: state.transcriptItems.filter((item) => item.sessionId === sessionId && !item.deletedAt),
         notes: state.notes.filter((item) => item.sessionId === sessionId),
         attachments: state.attachments.filter((item) => item.sessionId === sessionId),
         outputs: state.outputs.filter((item) => item.sessionId === sessionId),
@@ -630,24 +642,90 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         Partial<
           Pick<
             TranscriptItem,
-            'speakerLabel' | 'occurredAt' | 'tagIds' | 'startedAtMs' | 'endedAtMs' | 'confidence'
+            | 'id'
+            | 'speakerLabel'
+            | 'occurredAt'
+            | 'tagIds'
+            | 'startedAtMs'
+            | 'endedAtMs'
+            | 'confidence'
+            | 'model'
+            | 'isFinal'
           >
         >
     ) => {
       const timestamp = input.occurredAt ?? new Date().toISOString()
       const session = state.sessions.find((item) => item.id === sessionId)
-      const currentItems = state.transcriptItems.filter((item) => item.sessionId === sessionId)
+      const currentItems = state.transcriptItems.filter((item) => item.sessionId === sessionId && !item.deletedAt)
+      const existingItem = input.id
+        ? state.transcriptItems.find((item) => item.id === input.id && item.sessionId === sessionId)
+        : undefined
+
+      if (existingItem) {
+        const nextItem: TranscriptItem = {
+          ...existingItem,
+          text: input.text,
+          speakerLabel: input.speakerLabel ?? existingItem.speakerLabel,
+          occurredAt: input.occurredAt ?? existingItem.occurredAt,
+          tagIds: input.tagIds ?? existingItem.tagIds,
+          startedAtMs: input.startedAtMs ?? existingItem.startedAtMs,
+          endedAtMs: input.endedAtMs ?? existingItem.endedAtMs,
+          confidence: input.confidence ?? existingItem.confidence,
+          model: input.model ?? existingItem.model,
+          isFinal: input.isFinal ?? existingItem.isFinal,
+          deletedAt: null,
+          updatedAt: timestamp
+        }
+
+        await storage.transcriptItems.put(nextItem)
+
+        setState((current) => ({
+          ...current,
+          transcriptItems: current.transcriptItems
+            .map((item) => (item.id === nextItem.id ? nextItem : item))
+            .sort((left, right) => left.occurredAt.localeCompare(right.occurredAt)),
+          sessions: current.sessions
+            .map((item) =>
+              item.id === sessionId
+                ? {
+                    ...item,
+                    transcriptItemIds: item.transcriptItemIds.includes(nextItem.id)
+                      ? item.transcriptItemIds
+                      : [...item.transcriptItemIds, nextItem.id],
+                    updatedAt: timestamp
+                  }
+                : item
+            )
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+        }))
+
+        if (session) {
+          await storage.sessions.put({
+            ...session,
+            transcriptItemIds: session.transcriptItemIds.includes(nextItem.id)
+              ? session.transcriptItemIds
+              : [...session.transcriptItemIds, nextItem.id],
+            updatedAt: timestamp
+          })
+        }
+
+        return nextItem
+      }
+
       const transcriptItem: TranscriptItem = {
-        id: crypto.randomUUID(),
+        id: input.id ?? crypto.randomUUID(),
         sessionId,
         sequence: currentItems.length + 1,
         text: input.text,
+        isFinal: input.isFinal ?? true,
         speakerLabel: input.speakerLabel,
         occurredAt: timestamp,
         tagIds: input.tagIds ?? [],
         startedAtMs: input.startedAtMs,
         endedAtMs: input.endedAtMs,
         confidence: input.confidence,
+        model: input.model,
+        deletedAt: null,
         createdAt: timestamp,
         updatedAt: timestamp
       }
@@ -715,38 +793,50 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     []
   )
 
-  const clearTranscriptItems = useCallback(async (sessionId: string) => {
-    const currentItems = state.transcriptItems.filter((item) => item.sessionId === sessionId)
+  const deleteTranscriptItem = useCallback(
+    async (itemId: string) => {
+      const timestamp = new Date().toISOString()
+      const item = state.transcriptItems.find((entry) => entry.id === itemId)
 
-    await Promise.all(currentItems.map((item) => storage.transcriptItems.remove(item.id)))
+      if (!item) {
+        return
+      }
 
-    const session = state.sessions.find((item) => item.id === sessionId)
-    const updatedAt = new Date().toISOString()
+      const nextItem: TranscriptItem = {
+        ...item,
+        deletedAt: timestamp,
+        updatedAt: timestamp
+      }
+      const session = state.sessions.find((entry) => entry.id === item.sessionId)
 
-    setState((current) => ({
-      ...current,
-      transcriptItems: current.transcriptItems.filter((item) => item.sessionId !== sessionId),
-      sessions: current.sessions
-        .map((item) =>
-          item.id === sessionId
-            ? {
-                ...item,
-                transcriptItemIds: [],
-                updatedAt
-              }
-            : item
-        )
-        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
-    }))
+      await storage.transcriptItems.put(nextItem)
 
-    if (session) {
-      await storage.sessions.put({
-        ...session,
-        transcriptItemIds: [],
-        updatedAt
-      })
-    }
-  }, [state.sessions, state.transcriptItems])
+      if (session) {
+        await storage.sessions.put({
+          ...session,
+          transcriptItemIds: session.transcriptItemIds.filter((entry) => entry !== itemId),
+          updatedAt: timestamp
+        })
+      }
+
+      setState((current) => ({
+        ...current,
+        transcriptItems: current.transcriptItems.filter((entry) => entry.id !== itemId),
+        sessions: current.sessions
+          .map((entry) =>
+            entry.id === item.sessionId
+              ? {
+                  ...entry,
+                  transcriptItemIds: entry.transcriptItemIds.filter((transcriptItemId) => transcriptItemId !== itemId),
+                  updatedAt: timestamp
+                }
+              : entry
+          )
+          .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+      }))
+    },
+    [state.sessions, state.transcriptItems]
+  )
 
   const addNote = useCallback(
     async (
@@ -1052,8 +1142,8 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       createSessionFromUpload,
       updateSession,
       addTranscriptItem,
-      clearTranscriptItems,
       updateTranscriptItem,
+      deleteTranscriptItem,
       addNote,
       updateNote,
       addManualNote,
@@ -1067,9 +1157,9 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       addNote,
       addOutput,
       addTranscriptItem,
-      clearTranscriptItems,
       createSession,
       createSessionFromUpload,
+      deleteTranscriptItem,
       getProjectsForWorkspace,
       getSessionDetail,
       getSessionsForProject,

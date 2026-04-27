@@ -10,7 +10,8 @@ import {
   Plus,
   Radio,
   Sparkles,
-  Square
+  Square,
+  Trash2
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -76,10 +77,54 @@ async function openAttachment(attachment: Attachment) {
   }
 }
 
+function TranscriptBubble({
+  label,
+  onDelete,
+  text,
+  timestamp,
+  variant
+}: {
+  label: string
+  onDelete?: () => void
+  text: string
+  timestamp?: string
+  variant: 'final' | 'live'
+}) {
+  const isLive = variant === 'live'
+
+  return (
+    <article
+      className={`rounded-[1.25rem] rounded-tl-sm px-4 py-3 ${
+        isLive ? 'bg-[#ecfeff] text-[var(--asr-live-colour)]' : 'bg-white text-foreground'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold">{label}</p>
+          {timestamp ? <p className="mt-1 text-[11px] text-muted-foreground">{timestamp}</p> : null}
+        </div>
+        {onDelete ? (
+          <button
+            type="button"
+            aria-label="Delete transcript segment"
+            title="Delete transcript segment"
+            onClick={onDelete}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#fee2e2] hover:text-[#b91c1c]"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        ) : null}
+      </div>
+      <p className={`mt-3 whitespace-pre-wrap text-sm leading-6 ${isLive ? 'opacity-85' : ''}`}>{text}</p>
+    </article>
+  )
+}
+
 export function SessionPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const attachmentInputRef = useRef<HTMLInputElement | null>(null)
+  const transcriptListRef = useRef<HTMLDivElement | null>(null)
   const {
     addAttachmentFiles,
     addManualNote,
@@ -87,6 +132,7 @@ export function SessionPage() {
     addOutput,
     appSettings,
     createSession,
+    deleteTranscriptItem,
     getProjectsForWorkspace,
     getSessionDetail,
     localModelEntries,
@@ -137,6 +183,21 @@ export function SessionPage() {
   const detail = sessionId ? getSessionDetail(sessionId) : undefined
   const transcription = useSessionTranscription(detail)
 
+  useEffect(() => {
+    const transcriptList = transcriptListRef.current
+
+    if (!transcriptList) {
+      return
+    }
+
+    const distanceFromBottom =
+      transcriptList.scrollHeight - transcriptList.scrollTop - transcriptList.clientHeight
+
+    if (distanceFromBottom < 120) {
+      transcriptList.scrollTop = transcriptList.scrollHeight
+    }
+  }, [detail?.transcriptItems.length, transcription.draftSegment?.text])
+
   const timelineEntries = useMemo<TimelineEntry[]>(() => {
     if (!detail) {
       return []
@@ -182,9 +243,6 @@ export function SessionPage() {
   const selectedProvider = providerProfiles.find((entry) => entry.id === session.providerProfileId)
   const selectedLocalCacheMeta = modelCacheMeta.find((entry) => entry.modelEntryId === selectedLocalModel?.id)
   const sessionAsrMode = session.asrMode ?? appSettings.asrMode
-  const fullTranscript = transcriptItems
-    .map((item) => `${item.speakerLabel ?? 'Speaker'} · ${formatTime(item.occurredAt)}\n${item.text}`)
-    .join('\n\n')
 
   const runtimeActionLabel =
     session.source === 'upload'
@@ -272,6 +330,11 @@ export function SessionPage() {
 
     setActiveTab('notes')
     setFeedback(`Prompt for ${tag.name} copied to clipboard and saved into Notes.`)
+  }
+
+  async function handleDeleteTranscriptItem(itemId: string) {
+    await deleteTranscriptItem(itemId)
+    setFeedback('Transcript segment deleted.')
   }
 
   return (
@@ -412,6 +475,7 @@ export function SessionPage() {
                       tags={tags}
                       onUpdateTranscript={(itemId, text) => void updateTranscriptItem(itemId, { text })}
                       onUpdateNote={() => undefined}
+                      onDeleteTranscript={(itemId) => void handleDeleteTranscriptItem(itemId)}
                       onToggleTag={(itemType, itemId, tagId) => void toggleTagOnItem(itemType, itemId, tagId)}
                       onPromptTag={(itemType, itemId, tagId) => void handlePromptTag(itemType, itemId, tagId)}
                       onDragStart={setDraggedEntryId}
@@ -434,6 +498,7 @@ export function SessionPage() {
                       tags={tags}
                       onUpdateTranscript={() => undefined}
                       onUpdateNote={(noteId, content) => void updateNote(noteId, { content })}
+                      onDeleteTranscript={() => undefined}
                       onToggleTag={(itemType, itemId, tagId) => void toggleTagOnItem(itemType, itemId, tagId)}
                       onPromptTag={(itemType, itemId, tagId) => void handlePromptTag(itemType, itemId, tagId)}
                       onDragStart={setDraggedEntryId}
@@ -455,6 +520,7 @@ export function SessionPage() {
                     tags={tags}
                     onUpdateTranscript={() => undefined}
                     onUpdateNote={() => undefined}
+                    onDeleteTranscript={() => undefined}
                     onToggleTag={() => undefined}
                     onPromptTag={() => undefined}
                     onDragStart={setDraggedEntryId}
@@ -486,7 +552,7 @@ export function SessionPage() {
                 <div className="rounded-[1.5rem] bg-surface-subtle p-4">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                      Full transcript
+                      Transcript stream
                     </p>
                     {transcription.phase === 'transcribing' || transcription.downloadProgress !== undefined ? (
                       <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
@@ -494,16 +560,39 @@ export function SessionPage() {
                         {transcription.downloadProgress !== undefined
                           ? `Downloading model (${Math.round(transcription.downloadProgress)}%)`
                           : sessionAsrMode === 'realtime'
-                            ? 'Updating live transcript'
+                            ? 'Receiving live ASR'
                             : 'Processing audio'}
                       </span>
                     ) : null}
                   </div>
-                  <Textarea
-                    value={fullTranscript}
-                    readOnly
-                    className="mt-3 min-h-[26rem] border-0 bg-white"
-                  />
+                  <div
+                    ref={transcriptListRef}
+                    className="mt-3 grid max-h-[32rem] min-h-[26rem] content-start gap-3 overflow-y-auto rounded-[1.25rem] bg-white/70 p-3"
+                  >
+                    {transcriptItems.length === 0 && !transcription.draftSegment ? (
+                      <div className="rounded-[1.25rem] bg-white px-4 py-5 text-sm leading-6 text-muted-foreground">
+                        No transcript segments yet.
+                      </div>
+                    ) : null}
+                    {transcriptItems.map((item) => (
+                      <TranscriptBubble
+                        key={item.id}
+                        label={item.speakerLabel ?? 'Transcript'}
+                        timestamp={formatTime(item.occurredAt)}
+                        text={item.text}
+                        variant="final"
+                        onDelete={() => void handleDeleteTranscriptItem(item.id)}
+                      />
+                    ))}
+                    {transcription.draftSegment ? (
+                      <TranscriptBubble
+                        key={transcription.draftSegment.id}
+                        label="Live ASR"
+                        text={transcription.draftSegment.text}
+                        variant="live"
+                      />
+                    ) : null}
+                  </div>
                 </div>
               </TabsContent>
 

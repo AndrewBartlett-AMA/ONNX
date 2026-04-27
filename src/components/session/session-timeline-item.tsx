@@ -1,4 +1,4 @@
-import { GripVertical, MessageSquareText, Paperclip, StickyNote } from 'lucide-react'
+import { GripVertical, MessageSquareText, Paperclip, StickyNote, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Attachment, Note, TagTemplate, TranscriptItem } from '@/types/domain'
 import { formatTime, getInitials } from '@/lib/format'
@@ -16,6 +16,7 @@ interface SessionTimelineItemProps {
   tags: TagTemplate[]
   onUpdateTranscript: (itemId: string, text: string) => void
   onUpdateNote: (noteId: string, content: string) => void
+  onDeleteTranscript: (itemId: string) => void
   onToggleTag: (itemType: 'transcript' | 'note', itemId: string, tagId: string) => void
   onPromptTag: (itemType: 'transcript' | 'note', itemId: string, tagId: string) => void
   onDragStart: (entryId: string) => void
@@ -116,6 +117,7 @@ export function SessionTimelineItem({
   tags,
   onUpdateTranscript,
   onUpdateNote,
+  onDeleteTranscript,
   onToggleTag,
   onPromptTag,
   onDragStart,
@@ -223,6 +225,15 @@ export function SessionTimelineItem({
                 selectedTagIds={transcript.tagIds}
                 onToggleTag={(tagId) => onToggleTag('transcript', transcript.id, tagId)}
               />
+              <button
+                type="button"
+                aria-label="Delete transcript segment"
+                title="Delete transcript segment"
+                onClick={() => onDeleteTranscript(transcript.id)}
+                className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[#fee2e2] hover:text-[#b91c1c]"
+              >
+                <Trash2 className="size-4" />
+              </button>
             </div>
           </div>
 

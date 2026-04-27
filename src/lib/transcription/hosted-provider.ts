@@ -1,5 +1,5 @@
 import type { ProviderProfile } from '@/types/settings'
-import type { TranscriptSegment, TranscriptionResult } from '@/types/transcription'
+import type { TranscriptionResult, TranscriptionResultSegment } from '@/types/transcription'
 
 interface HostedSegment {
   text?: string
@@ -60,7 +60,7 @@ export function buildHostedTranscriptionRequest(
 }
 
 export function parseHostedTranscriptionResponse(payload: HostedResponse): TranscriptionResult {
-  const segments: TranscriptSegment[] =
+  const segments: TranscriptionResultSegment[] =
     payload.segments?.map((segment) => ({
       text: segment.text ?? '',
       startedAtMs: typeof segment.start === 'number' ? Math.round(segment.start * 1000) : undefined,

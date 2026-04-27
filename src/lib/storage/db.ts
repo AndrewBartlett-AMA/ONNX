@@ -12,7 +12,7 @@ import type {
 import type { AppSettings, LocalModelEntry, ModelCacheMeta, ProviderProfile } from '@/types/settings'
 
 const DATABASE_NAME = 'quiet-scribe'
-const DATABASE_VERSION = 2
+const DATABASE_VERSION = 3
 
 export interface QuietScribeDatabaseSchema extends DBSchema {
   workspaces: {

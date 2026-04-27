@@ -1,6 +1,6 @@
 import { env, pipeline, type ProgressInfo } from '@huggingface/transformers'
 import type { LocalModelEntry, ProviderProfile } from '@/types/settings'
-import type { RuntimeId, TranscriptionResult } from '@/types/transcription'
+import type { AsrMessage, RuntimeId, TranscriptionResult, TranscriptionResultSegment } from '@/types/transcription'
 import {
   buildHostedTranscriptionRequest,
   parseHostedTranscriptionResponse
@@ -51,6 +51,10 @@ export type TranscriptionWorkerEvent =
       requestKind?: 'full' | 'realtime-chunk'
       result: TranscriptionResult
       detail: string
+    }
+  | {
+      type: 'asr-message'
+      message: AsrMessage
     }
   | {
       type: 'error'
@@ -120,7 +124,56 @@ function toProgressSnapshot(info: ProgressInfo) {
     loadedBytes: 'loaded' in info ? info.loaded : undefined,
     totalBytes: 'total' in info ? info.total : undefined,
     progress:
-      info.status === 'done' ? 100 : typeof info.progress === 'number' ? info.progress : undefined
+      info.status === 'done' ? 100 : 'progress' in info && typeof info.progress === 'number' ? info.progress : undefined
+  }
+}
+
+function getResultSegments(result: TranscriptionResult): TranscriptionResultSegment[] {
+  return result.segments.length > 0
+    ? result.segments
+    : result.text.trim()
+      ? [{ text: result.text }]
+      : []
+}
+
+function postRealtimeAsrMessages(
+  sessionId: string,
+  result: TranscriptionResult,
+  model: string
+) {
+  for (const segment of getResultSegments(result)) {
+    const segmentId = crypto.randomUUID()
+    const text = segment.text.trim()
+
+    if (!text) {
+      continue
+    }
+
+    const baseMessage = {
+      sessionId,
+      segmentId,
+      text,
+      startMs: segment.startedAtMs,
+      endMs: segment.endedAtMs
+    }
+
+    workerContext.postMessage({
+      type: 'asr-message',
+      message: {
+        type: 'partial',
+        ...baseMessage
+      }
+    } satisfies TranscriptionWorkerEvent)
+
+    workerContext.postMessage({
+      type: 'asr-message',
+      message: {
+        type: 'final',
+        ...baseMessage,
+        confidence: segment.confidence,
+        model
+      }
+    } satisfies TranscriptionWorkerEvent)
   }
 }
 
@@ -211,6 +264,10 @@ async function transcribeLocalAudio(
   const result: TranscriptionResult = {
     text: typeof output.text === 'string' ? output.text.trim() : '',
     segments: []
+  }
+
+  if (isRealtimeChunk) {
+    postRealtimeAsrMessages(sessionId, result, modelEntry.repoId)
   }
 
   workerContext.postMessage({

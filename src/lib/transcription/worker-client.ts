@@ -49,6 +49,10 @@ function attachWorkerLifecycle(
         return
       }
 
+      if (message.type === 'asr-message') {
+        return
+      }
+
       reject(new Error(message.message))
     }
 

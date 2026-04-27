@@ -209,9 +209,11 @@ export const seedTranscriptItems: TranscriptItem[] = [
     sessionId: 'session-phoenix-sync',
     sequence: 1,
     text: 'We are still seeing latency spikes in staging, so the immediate priority is query optimization before the next rollout window.',
+    isFinal: true,
     speakerLabel: 'Jordan Dale',
     occurredAt: '2026-04-10T08:02:00.000Z',
     tagIds: [insightTagId],
+    model: 'onnx-community/whisper-tiny.en',
     createdAt: '2026-04-10T08:02:00.000Z',
     updatedAt: '2026-04-10T08:02:00.000Z'
   },
@@ -220,9 +222,11 @@ export const seedTranscriptItems: TranscriptItem[] = [
     sessionId: 'session-phoenix-sync',
     sequence: 2,
     text: 'I captured the dashboard during the spike, and the database call time jumps sharply while cache hit rate drops.',
+    isFinal: true,
     speakerLabel: 'Sarah Chen',
     occurredAt: '2026-04-10T08:07:00.000Z',
     tagIds: [quoteTagId],
+    model: 'onnx-community/whisper-tiny.en',
     createdAt: '2026-04-10T08:07:00.000Z',
     updatedAt: '2026-04-10T08:07:00.000Z'
   },
@@ -231,9 +235,11 @@ export const seedTranscriptItems: TranscriptItem[] = [
     sessionId: 'session-phoenix-sync',
     sequence: 3,
     text: 'Let’s move ticket #402 into the current sprint and make sure the rollout brief reflects the mitigation plan.',
+    isFinal: true,
     speakerLabel: 'Priya Kapoor',
     occurredAt: '2026-04-10T08:12:00.000Z',
     tagIds: [actionTagId, followUpTagId],
+    model: 'onnx-community/whisper-tiny.en',
     createdAt: '2026-04-10T08:12:00.000Z',
     updatedAt: '2026-04-10T08:12:00.000Z'
   }

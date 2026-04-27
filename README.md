@@ -35,6 +35,40 @@ Use a tiered inference strategy:
 2. **WebGPU second** where available and beneficial
 3. **WASM fallback** for maximum resilience and offline compatibility
 
+### Real-time append-only ASR
+
+Quiet Scribe treats transcription as an append-only stream of ASR messages:
+
+- partial ASR results update a live draft segment
+- final ASR results are committed as ordered transcript segments in IndexedDB
+- existing final segments are not overwritten by later ASR output
+- stopping recording, starting another chunk, or switching model/provider does not clear saved transcript segments
+- deletion only happens from an explicit Delete transcript segment action
+
+The session UI renders final transcript segments like a chat stream. The current live draft appears below the final list in a distinct live ASR colour so unstable text is visually separate from saved transcript text.
+
+The browser-local path uses microphone capture through `navigator.mediaDevices.getUserMedia({ audio: ... })` and `MediaRecorder` timeslices for short live audio chunks. The chunked Transformers.js worker emits normalized internal ASR messages, and the app is prepared for true partial/final streaming providers through the shared `AsrProvider` interface. A local WebSocket ASR service can emit messages in this shape:
+
+```json
+{ "type": "partial", "sessionId": "session-id", "segmentId": "segment-id", "text": "live words" }
+```
+
+```json
+{ "type": "final", "sessionId": "session-id", "segmentId": "segment-id", "text": "final words", "confidence": 0.92, "model": "granite-4.0-1b-speech" }
+```
+
+Configure ASR with Vite-exposed environment variables:
+
+```bash
+VITE_ASR_PROVIDER=local-websocket
+VITE_ASR_MODEL=granite-4.0-1b-speech
+VITE_ASR_WEBSOCKET_URL=ws://localhost:8765/asr
+VITE_ASR_SAMPLE_RATE=16000
+VITE_ASR_ENABLE_PARTIALS=true
+```
+
+`OPENAI_MODEL=gpt-5.5` is reserved for future non-ASR OpenAI chat, reasoning, or summarisation usage. ASR model selection stays separate through `VITE_ASR_PROVIDER` and `VITE_ASR_MODEL`.
+
 ### Product shape
 
 Quiet Scribe should behave like a desktop-quality utility:

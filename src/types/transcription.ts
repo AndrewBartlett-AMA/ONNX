@@ -23,18 +23,61 @@ export interface RuntimeSessionHandle {
 }
 
 export interface TranscriptSegment {
+  id: string
+  sessionId: string
+  text: string
+  startMs?: number
+  endMs?: number
+  speakerLabel?: string
+  confidence?: number
+  model?: string
+  final: boolean
+  createdAt: string
+}
+
+export interface TranscriptionResultSegment {
   text: string
   startedAtMs?: number
   endedAtMs?: number
   speakerLabel?: string
   confidence?: number
+  model?: string
 }
 
 export interface TranscriptionResult {
   text: string
-  segments: TranscriptSegment[]
+  segments: TranscriptionResultSegment[]
   warnings?: string[]
   durationMs?: number
+}
+
+export type AsrPartialMessage = {
+  type: 'partial'
+  sessionId: string
+  segmentId: string
+  text: string
+  startMs?: number
+  endMs?: number
+}
+
+export type AsrFinalMessage = {
+  type: 'final'
+  sessionId: string
+  segmentId: string
+  text: string
+  startMs?: number
+  endMs?: number
+  confidence?: number
+  model?: string
+}
+
+export type AsrMessage = AsrPartialMessage | AsrFinalMessage
+
+export interface AsrProvider {
+  start(sessionId: string): Promise<void>
+  stop(): Promise<void>
+  sendAudioFrame?(frame: Int16Array | ArrayBuffer | Blob): void
+  onMessage(callback: (message: AsrMessage) => void): void
 }
 
 export interface TranscribeChunkRequest {

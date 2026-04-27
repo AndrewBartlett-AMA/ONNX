@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "build:pages": "node ./scripts/build-pages.mjs",
     "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc -b --noEmit",
+    "test": "npm run test:transcript",
+    "test:transcript": "node ./scripts/test-transcript-state.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.0.1",

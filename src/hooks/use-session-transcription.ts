@@ -1,16 +1,24 @@
-import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
+import { startTransition, useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import type { SessionDetail } from '@/app/app-data-provider'
 import { useAppData } from '@/hooks/use-app-data'
 import { normalizeAudioBlob } from '@/lib/audio/normalize'
+import { transcriptReducer, createEmptyTranscriptState } from '@/lib/transcription/transcript-state'
 import { resolveLocalModelRuntime } from '@/lib/transcription/local-models'
 import { getRuntimeSnapshot } from '@/lib/transcription/runtime-registry'
-import type { Attachment } from '@/types/domain'
+import type { Attachment, TranscriptItem } from '@/types/domain'
 import type { AsrMode, LocalModelEntry } from '@/types/settings'
-import type { RuntimeId, RuntimeState } from '@/types/transcription'
+import type {
+  AsrFinalMessage,
+  AsrMessage,
+  RuntimeId,
+  RuntimeState,
+  TranscriptSegment,
+  TranscriptionResult
+} from '@/types/transcription'
 import type { TranscriptionWorkerEvent, TranscriptionWorkerMessage } from '@/workers/transcription.worker'
 
 const AUDIO_LEVEL_HISTORY_SIZE = 28
-const REALTIME_CHUNK_MS = 2000
+const REALTIME_CHUNK_MS = 1000
 
 interface SessionTranscriptionState {
   runtimeId: RuntimeId
@@ -19,6 +27,7 @@ interface SessionTranscriptionState {
   downloadProgress?: number
   audioLevels: number[]
   segmentsProcessed: number
+  draftSegment: TranscriptSegment | null
   isRunning: boolean
   start: () => Promise<void>
   stop: () => Promise<void>
@@ -116,11 +125,51 @@ function isRealtimePrepareCancellation(error: unknown) {
   return error instanceof Error && error.message.startsWith('Live ASR preparation was ')
 }
 
+function toTranscriptSegment(item: TranscriptItem): TranscriptSegment {
+  return {
+    id: item.id,
+    sessionId: item.sessionId,
+    text: item.text,
+    startMs: item.startedAtMs,
+    endMs: item.endedAtMs,
+    speakerLabel: item.speakerLabel,
+    confidence: item.confidence,
+    model: item.model,
+    final: item.isFinal,
+    createdAt: item.createdAt
+  }
+}
+
+function createFinalMessagesFromResult(
+  sessionId: string,
+  result: TranscriptionResult,
+  model?: string
+): AsrFinalMessage[] {
+  const resultSegments =
+    result.segments.length > 0
+      ? result.segments
+      : result.text.trim()
+        ? [{ text: result.text }]
+        : []
+
+  return resultSegments
+    .map((segment) => ({
+      type: 'final' as const,
+      sessionId,
+      segmentId: crypto.randomUUID(),
+      text: segment.text.trim(),
+      startMs: segment.startedAtMs,
+      endMs: segment.endedAtMs,
+      confidence: segment.confidence,
+      model: segment.model ?? model
+    }))
+    .filter((message) => message.text.length > 0)
+}
+
 export function useSessionTranscription(detail: SessionDetail | undefined): SessionTranscriptionState {
   const {
     addAttachmentFiles,
     addTranscriptItem,
-    clearTranscriptItems,
     localModelEntries,
     providerProfiles,
     updateSession,
@@ -138,7 +187,9 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
   const realtimeIsProcessingRef = useRef(false)
   const realtimeChunkIndexRef = useRef(0)
   const realtimeSegmentsCountRef = useRef(detail?.transcriptItems.length ?? 0)
+  const pendingRealtimeFinalMessagesRef = useRef<AsrFinalMessage[]>([])
   const realtimePrepareRef = useRef<PendingRealtimePrepare | null>(null)
+  const [transcriptState, dispatchTranscript] = useReducer(transcriptReducer, undefined, createEmptyTranscriptState)
   const [audioLevels, setAudioLevels] = useState(createIdleAudioLevels)
   const [downloadProgress, setDownloadProgress] = useState<number | undefined>(undefined)
   const [runtimeId, setRuntimeId] = useState<RuntimeId>(detail?.session.runtime ?? 'wasm')
@@ -152,9 +203,11 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
     realtimeChunkQueueRef.current = []
     realtimeIsProcessingRef.current = false
     realtimeChunkIndexRef.current = 0
+    pendingRealtimeFinalMessagesRef.current = []
     realtimePrepareRef.current = null
     realtimeSegmentsCountRef.current = detailRef.current?.transcriptItems.length ?? 0
     setSegmentsProcessed(realtimeSegmentsCountRef.current)
+    dispatchTranscript({ type: 'CLEAR_DRAFT' })
   }, [])
 
   const rejectRealtimePrepare = useCallback((error: Error) => {
@@ -196,6 +249,10 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
     setSegmentsProcessed(detail?.transcriptItems.length ?? 0)
     setDownloadProgress(undefined)
     setAudioLevels(createIdleAudioLevels())
+    dispatchTranscript({
+      type: 'LOAD_SEGMENTS',
+      segments: (detail?.transcriptItems ?? []).map(toTranscriptSegment)
+    })
     resetRealtimeState()
   }, [detail?.session.id, resetRealtimeState])
 
@@ -460,6 +517,58 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
     }
   }, [appSettings.remoteModelHostOverride, ensureWorker, finalizeRealtimeRecording, updateSession])
 
+  const commitAsrFinalMessage = useCallback(
+    async (message: AsrFinalMessage) => {
+      const currentDetail = detailRef.current
+      const text = message.text.trim()
+
+      if (!currentDetail || !text) {
+        dispatchTranscript({ type: 'CLEAR_DRAFT' })
+        return false
+      }
+
+      dispatchTranscript({ type: 'ASR_FINAL', message: { ...message, text } })
+
+      await addTranscriptItem(currentDetail.session.id, {
+        id: message.segmentId,
+        text,
+        occurredAt: new Date().toISOString(),
+        startedAtMs: message.startMs,
+        endedAtMs: message.endMs,
+        confidence: message.confidence,
+        model: message.model ?? currentDetail.session.modelId,
+        isFinal: true
+      })
+
+      realtimeSegmentsCountRef.current += 1
+      setSegmentsProcessed(realtimeSegmentsCountRef.current)
+      return true
+    },
+    [addTranscriptItem]
+  )
+
+  const handleAsrMessage = useCallback(
+    async (message: AsrMessage) => {
+      const text = message.text.trim()
+
+      if (!text) {
+        if (message.type === 'final') {
+          dispatchTranscript({ type: 'CLEAR_DRAFT' })
+        }
+        return false
+      }
+
+      if (message.type === 'partial') {
+        dispatchTranscript({ type: 'ASR_PARTIAL', message: { ...message, text } })
+        setStatusDetail('Receiving live ASR text…')
+        return true
+      }
+
+      return commitAsrFinalMessage({ ...message, text })
+    },
+    [commitAsrFinalMessage]
+  )
+
   const handleRealtimeChunkComplete = useCallback(
     async (message: Extract<TranscriptionWorkerEvent, { type: 'complete' }>) => {
       const currentDetail = detailRef.current
@@ -468,32 +577,27 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
         return
       }
 
-      const transcriptItems =
-        message.result.segments.length > 0
-          ? message.result.segments
-          : [{ text: message.result.text, confidence: undefined }]
-      const persistedSegments = transcriptItems.filter((segment) => segment.text?.trim())
+      const finalMessages = pendingRealtimeFinalMessagesRef.current.splice(0)
+      const messagesToCommit =
+        finalMessages.length > 0
+          ? finalMessages
+          : createFinalMessagesFromResult(currentDetail.session.id, message.result, currentDetail.session.modelId)
+      let committedCount = 0
 
-      for (const segment of persistedSegments) {
-        await addTranscriptItem(currentDetail.session.id, {
-          text: segment.text.trim(),
-          occurredAt: new Date().toISOString(),
-          startedAtMs: segment.startedAtMs,
-          endedAtMs: segment.endedAtMs,
-          confidence: segment.confidence
-        })
+      for (const finalMessage of messagesToCommit) {
+        if (await commitAsrFinalMessage(finalMessage)) {
+          committedCount += 1
+        }
       }
 
-      realtimeSegmentsCountRef.current += persistedSegments.length
-      setSegmentsProcessed(realtimeSegmentsCountRef.current)
       setDownloadProgress(undefined)
       realtimeIsProcessingRef.current = false
 
       if (recorderRef.current?.state === 'recording') {
         setPhase('recording')
         setStatusDetail(
-          persistedSegments.length > 0
-            ? `Live transcript updated with ${persistedSegments.length} new segment${persistedSegments.length === 1 ? '' : 's'}.`
+          committedCount > 0
+            ? `Live transcript appended ${committedCount} segment${committedCount === 1 ? '' : 's'}.`
             : 'Listening for speech…'
         )
       } else {
@@ -508,7 +612,7 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
 
       await finalizeRealtimeRecording()
     },
-    [addTranscriptItem, finalizeRealtimeRecording, processRealtimeQueue]
+    [commitAsrFinalMessage, finalizeRealtimeRecording, processRealtimeQueue]
   )
 
   useEffect(() => {
@@ -549,6 +653,20 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
         return
       }
 
+      if (message.type === 'asr-message') {
+        if (message.message.sessionId !== currentDetail.session.id) {
+          return
+        }
+
+        if (message.message.type === 'final') {
+          pendingRealtimeFinalMessagesRef.current.push(message.message)
+          return
+        }
+
+        void handleAsrMessage(message.message)
+        return
+      }
+
       if (message.type === 'complete') {
         if (message.requestKind === 'realtime-chunk') {
           void handleRealtimeChunkComplete(message)
@@ -558,29 +676,22 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
         setDownloadProgress(undefined)
 
         void (async () => {
-          await clearTranscriptItems(currentDetail.session.id)
+          const finalMessages = createFinalMessagesFromResult(
+            currentDetail.session.id,
+            message.result,
+            currentDetail.session.modelId
+          )
+          let committedCount = 0
 
-          const transcriptItems =
-            message.result.segments.length > 0
-              ? message.result.segments
-              : [{ text: message.result.text, confidence: undefined }]
-          const persistedSegments = transcriptItems.filter((segment) => segment.text?.trim())
-
-          for (const [index, segment] of persistedSegments.entries()) {
-            await addTranscriptItem(currentDetail.session.id, {
-              text: segment.text.trim(),
-              occurredAt: new Date(Date.now() + index).toISOString(),
-              startedAtMs: segment.startedAtMs,
-              endedAtMs: segment.endedAtMs,
-              confidence: segment.confidence
-            })
+          for (const finalMessage of finalMessages) {
+            if (await commitAsrFinalMessage(finalMessage)) {
+              committedCount += 1
+            }
           }
 
-          realtimeSegmentsCountRef.current = persistedSegments.length
-          setSegmentsProcessed(persistedSegments.length)
           setPhase('ready')
           setStatusDetail(
-            persistedSegments.length > 0
+            committedCount > 0
               ? message.detail
               : 'Transcription completed, but no speech was detected in the captured audio.'
           )
@@ -611,7 +722,14 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
     return () => {
       worker.onmessage = null
     }
-  }, [addTranscriptItem, clearTranscriptItems, ensureWorker, handleRealtimeChunkComplete, rejectRealtimePrepare, updateSession])
+  }, [
+    commitAsrFinalMessage,
+    ensureWorker,
+    handleAsrMessage,
+    handleRealtimeChunkComplete,
+    rejectRealtimePrepare,
+    updateSession
+  ])
 
   const transcribeBlob = useCallback(
     async (blob: Blob, fileName: string) => {
@@ -932,6 +1050,7 @@ export function useSessionTranscription(detail: SessionDetail | undefined): Sess
     downloadProgress,
     audioLevels,
     segmentsProcessed,
+    draftSegment: transcriptState.draftSegment,
     isRunning: phase === 'recording' || phase === 'transcribing',
     start,
     stop

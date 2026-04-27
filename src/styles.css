@@ -29,6 +29,7 @@
   --muted-foreground: oklch(0.48 0.013 252);
   --accent: oklch(0.57 0.16 255);
   --accent-foreground: oklch(0.99 0.002 255);
+  --asr-live-colour: oklch(0.52 0.12 190);
   --success: oklch(0.62 0.13 160);
   --success-foreground: oklch(0.99 0.002 160);
   --ring: oklch(0.7 0.12 252);

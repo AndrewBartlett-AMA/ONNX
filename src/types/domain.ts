@@ -59,18 +59,22 @@ export interface Session extends BaseEntity {
   durationMs?: number
   startedAt?: ISODateString
   endedAt?: ISODateString
+  deletedAt?: ISODateString | null
 }
 
 export interface TranscriptItem extends BaseEntity {
   sessionId: Session['id']
   sequence: number
   text: string
+  isFinal: boolean
   speakerLabel?: string
   occurredAt: ISODateString
   tagIds: TagTemplate['id'][]
   startedAtMs?: number
   endedAtMs?: number
   confidence?: number
+  model?: string
+  deletedAt?: ISODateString | null
 }
 
 export interface Note extends BaseEntity {
